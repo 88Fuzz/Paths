@@ -120,10 +120,10 @@ bool GameState::handleEvent(const sf::Event* event)
             findPath();
             sf::Time time = clock.getElapsedTime();
             std::cout << "It took " << time.asMilliseconds() << " milliseconds to calculate the shortest path\n";
-//            map.layerChildNode(
-//                    new Circle(Category::Type::NONE, windowTileSize.x, windowTileSize.y, squareSize, startNode, endNode,
-//                            &map),
-//                    MapNode::get1d(startNode->getPosition().x, startNode->getPosition().y, windowTileSize.x));
+            map.layerChildNode(
+                    new Circle(Category::Type::NONE, windowTileSize.x, windowTileSize.y, squareSize, startNode, endNode,
+                            &map),
+                    MapNode::get1d(startNode->getTilePosition().x, startNode->getTilePosition().y, windowTileSize.x));
         }
 
     }
@@ -169,6 +169,7 @@ void GameState::findPath()
     MapNode *currentNode;
     MapNode *adjacentNode;
     sf::Vector2f pos;
+    sf::Vector2f tilePos;
     int i, j;
     bool finished = false;
     MapNode::Type nodeType;
@@ -192,27 +193,28 @@ void GameState::findPath()
 //        if(currentNode != startNode)
         currentNode->setType(MapNode::Type::CLOSED);
 
-        pos = currentNode->getTilePosition();
-        for(i = pos.x - 1; i <= pos.x + 1; i++)
+        pos = currentNode->getPosition();
+        tilePos = currentNode->getTilePosition();
+        for(i = tilePos.x - 1; i <= tilePos.x + 1; i++)
         {
             //Check so that x is not out of bounds
             if(i < 0 || i > windowTileSize.x - 1)
                 continue;
 
-            for(j = pos.y - 1; j <= pos.y + 1; j++)
+            for(j = tilePos.y - 1; j <= tilePos.y + 1; j++)
             {
                 //Check so that j is not out of bounds or not the current tile
-                if(j < 0 || j > windowTileSize.y - 1 || (i == pos.x && j == pos.y))
+                if(j < 0 || j > windowTileSize.y - 1 || (i == tilePos.x && j == tilePos.y))
                     continue;
 
                 //If checking a diagonal, make sure it is possible to get there
-                if(i != pos.x && j != pos.y)
+                if(i != tilePos.x && j != tilePos.y)
                 {
-                    adjacentNode = (MapNode *) map.getChildNode(MapNode::get1d(i, pos.y, windowTileSize.x));
+                    adjacentNode = (MapNode *) map.getChildNode(MapNode::get1d(i, tilePos.y, windowTileSize.x));
                     if(adjacentNode->getType() & MapNode::Type::BLOCKING)
                         continue;
 
-                    adjacentNode = (MapNode *) map.getChildNode(MapNode::get1d(pos.x, j, windowTileSize.x));
+                    adjacentNode = (MapNode *) map.getChildNode(MapNode::get1d(tilePos.x, j, windowTileSize.x));
                     if(adjacentNode->getType() & MapNode::Type::BLOCKING)
                         continue;
                 }

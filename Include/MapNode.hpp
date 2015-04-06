@@ -32,6 +32,7 @@ public:
     MapNode::Type getType();
     sf::Vector2f getPosition();
     sf::Vector2f getTilePosition();
+    sf::Vector2f getCenteredPosition();
     int getTileWidth();
     int getTileHeight();
 

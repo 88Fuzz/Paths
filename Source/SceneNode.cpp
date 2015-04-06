@@ -290,6 +290,7 @@ std::vector<SceneNode *>::iterator SceneNode::getChildIteratorEnd()
  */
 int SceneNode::layerChildNode(SceneNode *node, int pos)
 {
+    std::cout << "Adding node at pos " << pos << " childe size iiiiiiiis" << children.size() << "\n";
 
     if(children.size() < pos)
         return 0;

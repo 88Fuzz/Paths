@@ -3,6 +3,7 @@
 
 #include "Moveable.hpp"
 #include "MapNode.hpp"
+#include "MySprite.hpp"
 #include <SFML/Graphics/CircleShape.hpp>
 
 class Circle: public Moveable
@@ -27,7 +28,9 @@ private:
     MapNode *map;
     //TODO change circle and SceneNode's rect
     sf::CircleShape circle;
+//    MySprite sprite;
     sf::Vector2f pos;
+    sf::Vector2f tilePos;
 };
 
 #endif

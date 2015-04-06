@@ -36,9 +36,14 @@ sf::Vector2f MapNode::getPosition()
 
 sf::Vector2f MapNode::getTilePosition()
 {
-    std::cout << "pos x: " << pos.x << " y: " << pos.y << "\n";
     sf::Vector2f tmpPos = sf::Vector2f(pos.x / tileWidth, pos.y / tileHeight);
-    std::cout << " x " << tmpPos.x << " y " << tmpPos.y << "\n";
+    return tmpPos;
+}
+
+
+sf::Vector2f MapNode::getCenteredPosition()
+{
+    sf::Vector2f tmpPos = sf::Vector2f(pos.x + tileWidth/2, pos.y + tileHeight/2);
     return tmpPos;
 }
 
