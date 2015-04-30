@@ -1,0 +1,61 @@
+
+tiles.png
+format: RGBA8888
+filter: Nearest,Nearest
+repeat: none
+BlockTile
+  rotate: false
+  xy: 1, 1
+  size: 30, 30
+  orig: 30, 30
+  offset: 0, 0
+  index: -1
+Circle
+  rotate: false
+  xy: 33, 1
+  size: 30, 30
+  orig: 30, 30
+  offset: 0, 0
+  index: -1
+ClosedTile
+  rotate: false
+  xy: 65, 1
+  size: 30, 30
+  orig: 30, 30
+  offset: 0, 0
+  index: -1
+EndTile
+  rotate: false
+  xy: 97, 1
+  size: 30, 30
+  orig: 30, 30
+  offset: 0, 0
+  index: -1
+GrassTile
+  rotate: false
+  xy: 129, 1
+  size: 30, 30
+  orig: 30, 30
+  offset: 0, 0
+  index: -1
+OpenTile
+  rotate: false
+  xy: 161, 1
+  size: 30, 30
+  orig: 30, 30
+  offset: 0, 0
+  index: -1
+PathTile
+  rotate: false
+  xy: 193, 1
+  size: 30, 30
+  orig: 30, 30
+  offset: 0, 0
+  index: -1
+StartTile
+  rotate: false
+  xy: 225, 1
+  size: 30, 30
+  orig: 30, 30
+  offset: 0, 0
+  index: -1
