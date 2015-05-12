@@ -4,7 +4,6 @@ import java.util.Iterator;
 
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
-import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Vector2;
 import com.paths.constants.TextureConstants;
 
@@ -43,35 +42,31 @@ public class MapNode extends SceneNode
         }
     }
 
-    private Vector2 pos;
     private Category nodeType;
-    private MyTexture sprite;
-    private int tileWidth;
-    private int tileHeight;
     private float gValue;
     private float hValue;
     private MapNode parentPathNode;
     private MapNode childPathNode;
     private TextureAtlas atlas;
+    private Vector2 deleteMe;
 
-    public MapNode(TextureAtlas atlas, int x, int y, int width, int height, Category type)
+    public MapNode(TextureAtlas atlas, int x, int y, int width, int height, int mapTileWidth, int mapTileHeight, int tileSize, Category type)
     {
-        super(SceneNode.Category.NONE);
-        init(atlas,x,y,width,height,type);
+        super();
+        init(atlas, x, y, width, height, mapTileWidth, mapTileHeight, tileSize, type);
     }
     
-    public void init(TextureAtlas atlas, int x, int y, int width, int height, Category type)
+    public void init(TextureAtlas atlas, int x, int y, int width, int height, int mapTileWidth, int mapTileHeight, int tileSize, Category type)
     {
+        super.init(SceneNode.Category.NONE, mapTileWidth, mapTileHeight, tileSize, null, null);
+        deleteMe = new Vector2(x, y);
         pos = new Vector2(x * width,y * height);
-        System.out.println("x and y and pos " + x + " " + y + " " + " " + pos);
         gValue = 0;
         hValue = 0;
         parentPathNode = null;
         childPathNode = null;
-        tileWidth = width;
-        tileHeight = height;
         this.atlas = atlas;
-        sprite = new MyTexture(null, pos, new Vector2(width/2, height/2),new Vector2(tileWidth, tileHeight), new Vector2(1,1), 0);
+        sprite = new MyTexture(null, pos, new Vector2(width/2, height/2),new Vector2(tileSize, tileSize), new Vector2(1,1), 0);
         setType(type);
     }
 
@@ -102,30 +97,10 @@ public class MapNode extends SceneNode
         return nodeType;
     }
 
-    public Vector2 getPosition()
-    {
-        Vector2 tmpPos = new Vector2(pos.x, pos.y);
-        return tmpPos;
-    }
-
-    public Vector2 getTilePosition()
-    {
-        Vector2 tmpPos = new Vector2(pos.x / tileWidth, pos.y / tileHeight);
-        return tmpPos;
-    }
-
     public Vector2 getCenteredPosition()
     {
-        Vector2 tmpPos = new Vector2(pos.x + tileWidth/2, pos.y + tileHeight/2);
+        Vector2 tmpPos = new Vector2(pos.x + mapTileWidth/2, pos.y + mapTileHeight/2);
         return tmpPos;
-    }
-    public int getTileWidth()
-    {
-        return tileWidth;
-    }
-    public int getTileHeight()
-    {
-        return tileHeight;
     }
 
     //gValue + hValue
@@ -182,5 +157,11 @@ public class MapNode extends SceneNode
     public Iterator<SceneNode> getChildrenIterator()
     {
         return children.iterator();
+    }
+
+    @Override
+    public void printDebugCurrent()
+    {
+        System.out.println("tile number " + deleteMe);
     }
 }

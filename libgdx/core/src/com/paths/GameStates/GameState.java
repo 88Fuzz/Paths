@@ -53,10 +53,10 @@ public class GameState extends ApplicationAdapter implements InputProcessor
 		atlas = assMan.get(TextureConstants.TILE_TEXTURES);
 		batch = new SpriteBatch();
         tileSize = 30;
-        map = new MapNode(null, 0, 0, 0, 0, MapNode.Category.NONE);
         windowTileSize = new Vector2();
         windowTileSize.x = Gdx.graphics.getWidth() / tileSize;
         windowTileSize.y = Gdx.graphics.getHeight() / tileSize;
+        map = new MapNode(null, 0, 0, 0, 0, (int)windowTileSize.x, (int)windowTileSize.y, tileSize, MapNode.Category.NONE);
         squareType = MapNode.Category.START;
         startNode = null;
         endNode = null;
@@ -65,7 +65,7 @@ public class GameState extends ApplicationAdapter implements InputProcessor
         {
             for(int i = 0; i < windowTileSize.x; i++)
             {
-                map.attachChild(new MapNode(atlas, i, j, tileSize, tileSize, MapNode.Category.REGULAR));
+                map.attachChild(new MapNode(atlas, i, j, tileSize, tileSize, (int)windowTileSize.x, (int)windowTileSize.y, tileSize, MapNode.Category.REGULAR));
             }
         }
         
@@ -89,7 +89,8 @@ public class GameState extends ApplicationAdapter implements InputProcessor
     @Override
     public void render()
     {
-        map.update(Gdx.graphics.getDeltaTime());
+        //TODO add the while buffer in case dt gets waaaaay too large
+        map.update(map, Gdx.graphics.getDeltaTime());
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 		//TODO figure out if the batch.begin()/batch.end() should be moved to the individual draw methods?
 		batch.begin();
@@ -123,6 +124,7 @@ public class GameState extends ApplicationAdapter implements InputProcessor
                     SceneNode.get1d((int)startNode.getTilePosition().x, (int)startNode.getTilePosition().y, (int)windowTileSize.x));
         }
             
+        map.printDebug();
         return true;
     }
 

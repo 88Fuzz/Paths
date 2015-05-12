@@ -6,22 +6,31 @@ import com.paths.drawable.SceneNode;
 public class Moveable extends SceneNode
 {
     protected int tileSize;
-    protected int mapWidth;
-    protected int mapHeight;
+    protected float maxVelocity;
     protected Vector2 velocity;
+    protected SceneNode map;
+    protected Vector2 tilePos;
+    private boolean swap;
+    
+    /*
+     * init must be called
+     */
+    public Moveable() { }
 
-    public Moveable(Category category, int mapWidth, int mapHeight, int tileSize)
+    public Moveable(Category category, int mapTileWidth, int mapTileHeight, int tileSize, SceneNode map)
     {
-        super(category);
-        init(mapWidth, mapHeight, tileSize);
+        super();
+        init(category, mapTileWidth, mapTileHeight, tileSize, map);
     }
 
-    private void init(int mapWidth, int mapHeight, int tileSize)
+    private void init(Category category, int mapTileWidth, int mapTileHeight, int tileSize, SceneNode map)
     {
+        super.init(category, mapTileWidth, mapTileHeight, tileSize, null, null);
+        this.map = map;
         this.tileSize = tileSize;
-        this.mapWidth = mapWidth;
-        this.mapHeight = mapHeight;
         this.velocity = new Vector2(0,0);
+        this.swap= false;
+        this.tilePos = new Vector2();
     }
 
     // TODO figure out how to implement this method
@@ -30,24 +39,24 @@ public class Moveable extends SceneNode
         super.dispose();
     }
 
-    public void setMapWidth(int width)
+    public void setMapTileWidth(int width)
     {
-        mapWidth = width;
+        mapTileWidth = width;
     }
 
-    public int getMapWidth()
+    public int getMapTileWidth()
     {
-        return mapWidth;
+        return mapTileWidth;
     }
 
-    public void setMapHeight(int height)
+    public void setMapTileHeight(int height)
     {
-        mapHeight = height;
+        mapTileHeight = height;
     }
 
-    public int getMapHeight()
+    public int getMapTileHeight()
     {
-        return mapHeight;
+        return mapTileHeight;
     }
 
     public void setTileSize(int size)
@@ -59,5 +68,51 @@ public class Moveable extends SceneNode
     {
         return tileSize;
     }
+    
+    @Override
+    protected void updateCurrent(SceneNode superNode, float dt)
+    {
+        Vector2 tmpVector = new Vector2();
+        tmpVector.x = velocity.x * dt;
+        tmpVector.y = velocity.y * dt;
+        pos.x += tmpVector.x;
+        pos.y += tmpVector.y;
+        
+        tmpVector.x = tilePos.x;
+        tmpVector.y = tilePos.y;
+        
+        tilePos.x = (int) pos.x / tileSize;
+        tilePos.y = (int) pos.y / tileSize;
+        
+        if(!tmpVector.equals(tilePos))
+        {
+            //have to mark this for removal later cause of bullshit concurrent modification exceptions
+            swap = true;
+        }
+    }
+    
+    public Vector2 getTilePos()
+    {
+        Vector2 tmp = new Vector2();
+        tmp.x = tilePos.x;
+        tmp.y = tilePos.y;
+        
+        return tmp;
+    }
 
+    public boolean needToSwap()
+    {
+        if(swap)
+        {
+            swap = false;
+            return true;
+        }
+        return false;
+    }
+    
+    @Override
+    public void printDebugCurrent()
+    {
+        System.out.println("\thmmmmmm, moveable");
+    }
 }

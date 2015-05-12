@@ -2,24 +2,17 @@ package com.paths.drawable.movable;
 
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
-import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Vector2;
 import com.paths.constants.TextureConstants;
 import com.paths.drawable.MapNode;
 import com.paths.drawable.MyTexture;
-import com.paths.drawable.MapNode.Category;
 import com.paths.drawable.SceneNode;
 
 public class Mob extends Moveable
 {
     private MapNode startNode;
     private MapNode endNode;
-    private SceneNode map;
-    private Vector2 tilePos;
-    private Vector2 pos;
-    private float maxVelocity;
     private float distanceToTravel;
-    private MyTexture sprite;
     
     //TODO fix these so that it can contain multiple parents and currents!
     private MapNode parentNode;
@@ -27,7 +20,7 @@ public class Mob extends Moveable
 
     public Mob(Category category, TextureAtlas atlas, int mapWidth, int mapHeight, int tileSize, MapNode start, MapNode end, SceneNode map)
     {
-        super(category, mapWidth, mapHeight, tileSize);
+        super(category, mapWidth, mapHeight, tileSize, map);
         init(atlas, start, end, map);
     }
 
@@ -46,11 +39,8 @@ public class Mob extends Moveable
         pos = startNode.getPosition();
 //        pos = startNode.getCenteredPosition();
 
-        sprite = new MyTexture(atlas.findRegion(TextureConstants.CIRCLE_KEY), pos, new Vector2(0, 0), new Vector2(30, 30), new Vector2(1, 1), 0);
+        sprite = new MyTexture(atlas.findRegion(TextureConstants.CIRCLE_KEY), pos, new Vector2(15, 15), new Vector2(30, 30), new Vector2(1, 1), 0);
         calculateVelocity();
-
-        System.out.println("startNode position " + startNode.getPosition()+ " 1d " + SceneNode.get1d((int) startNode.getPosition().x/tileSize, (int) startNode.getPosition().y/tileSize, 3));
-        System.out.println("this guy starting position " + pos + "  tilePos " + tilePos);
     }
 
     //TODO figure out how to implement this method
@@ -99,6 +89,7 @@ public class Mob extends Moveable
         distanceToTravel = (float) Math.sqrt(retVal);
     }
 
+    @Override
     public void drawCurrent(SpriteBatch batch)
     {
         Vector2 texturePos = sprite.getPos();
@@ -112,19 +103,13 @@ public class Mob extends Moveable
                 sprite.getRegionWidth(), sprite.getRegionHeight(), false, false);
     }
 
-    protected void updateCurrent(float dt)
+    @Override
+    protected void updateCurrent(SceneNode superNode, float dt)
     {
-        //TODO add the while buffer in case dt gets waaaaay too large
-        Vector2 vel = new Vector2();
-        vel.x = velocity.x * dt;
-        vel.y = velocity.y * dt;
-        pos.x += vel.x;
-        pos.y += vel.y;
+        super.updateCurrent(superNode, dt);
         sprite.setPos(pos);
-        tilePos.x = (int) pos.x / tileSize;
-        tilePos.y = (int) pos.y / tileSize;
 
-        float distance = vel.x * vel.x + vel.y * vel.y;
+        float distance = velocity.x*dt * velocity.x*dt + velocity.y*dt * velocity.y*dt;
 
         distanceToTravel -= Math.sqrt(distance);
 

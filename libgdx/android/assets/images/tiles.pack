@@ -52,10 +52,24 @@ PathTile
   orig: 30, 30
   offset: 0, 0
   index: -1
-StartTile
+Person
   rotate: false
   xy: 225, 1
   size: 30, 30
   orig: 30, 30
+  offset: 0, 0
+  index: -1
+StartTile
+  rotate: false
+  xy: 257, 1
+  size: 30, 30
+  orig: 30, 30
+  offset: 0, 0
+  index: -1
+SimpleBullet
+  rotate: false
+  xy: 289, 16
+  size: 15, 15
+  orig: 15, 15
   offset: 0, 0
   index: -1

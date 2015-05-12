@@ -5,6 +5,8 @@ import java.util.Iterator;
 import java.util.LinkedList;
 
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.math.Vector2;
+import com.paths.drawable.movable.Mob;
 
 /*
  * Lowest level drawable object
@@ -26,21 +28,53 @@ public class SceneNode
     private Category type;
     protected ArrayList<SceneNode> children;
     protected ArrayList<SceneNode> parents;
-
-    public SceneNode(Category category)
+    protected int mapTileWidth;
+    protected int mapTileHeight;
+    protected int tileSize;
+    protected Vector2 pos;
+    protected MyTexture sprite;
+    
+    /*
+     * This should only be used if you plan to call init() after!
+     */
+    public SceneNode()
     {
-        init(category);
+        
     }
 
-    public void init(Category category)
+    public SceneNode(Category category, int mapWidth, int mapHeight, int tileSize, Vector2 pos, MyTexture sprite)
+    {
+        init(category, mapWidth, mapHeight, tileSize, pos, sprite);
+    }
+
+    public void init(Category category, int mapTileWidth, int mapTileHeight, int tileSize, Vector2 pos, MyTexture sprite)
     {
         type = category;
         children = new ArrayList<SceneNode>();
         parents = new ArrayList<SceneNode>();
+        this.tileSize = tileSize;
+        this.mapTileWidth = mapTileWidth;
+        this.mapTileHeight = mapTileHeight;
+        this.pos = pos;
+        this.sprite = sprite;
+    }
+
+    public SceneNode detachChild(SceneNode node, int pos)
+    {
+        System.out.println("What is going on " + this + " " + node.toString());
+        SceneNode result = null;
+        
+        if(children.size() < pos)
+            return result;
+        
+//        return children.get(pos).detachChild(node);
+        return children.get(pos).detachChild(node);
     }
 
     public SceneNode detachChild(SceneNode node)
     {
+        System.out.println("looking for " + node.toString());
+        System.out.println("in " + this.toString());
         SceneNode result = null;
         for(Iterator<SceneNode> iterator = children.iterator(); iterator
                 .hasNext();)
@@ -101,7 +135,6 @@ public class SceneNode
 
         if(!drawingQ.isEmpty())
             drawingQ.peek().draw(batch);
-
     }
 
     protected void drawCurrent(SpriteBatch batch)
@@ -118,23 +151,39 @@ public class SceneNode
 
     }
 
-    public void update(float dt)
+    public void update(SceneNode superNode, float dt)
     {
-        updateCurrent(dt);
-        updateChildren(dt);
+        //TODO add the while buffer in case dt gets waaaaay too large
+        updateCurrent(superNode, dt);
+        updateChildren(superNode, dt);
     }
 
-    protected void updateCurrent(float dt)
+    protected void updateCurrent(SceneNode superNode, float dt)
     {
         // Do nothing by default
     }
 
-    private void updateChildren(float dt)
+    private void updateChildren(SceneNode superNode, float dt)
     {
-        for(SceneNode child : children)
+        SceneNode node;
+
+        for(Iterator<SceneNode> it = children.iterator(); it.hasNext();)
         {
-            child.update(dt);
+            node = it.next();
+            node.update(superNode, dt);
+
+            if(node.needToSwap())
+            {
+                it.remove();
+                
+                Vector2 tmpVector = ((Mob) node).getTilePos();
+                superNode.layerChildNode(node, SceneNode.get1d((int)tmpVector.x, (int)tmpVector.y, mapTileWidth));
+            }
         }
+//        for(SceneNode child : children)
+//        {
+//            child.update(dt);
+//        }
     }
 
     public SceneNode getChildNode(int pos)
@@ -183,5 +232,57 @@ public class SceneNode
     public void dispose()
     {
         
+    }
+
+    public boolean needToSwap()
+    {
+        return false;
+    }
+    
+    public void printDebug()
+    {
+        printDebugCurrent();
+        printDebugChildren();
+    }
+    
+    public void printDebugCurrent()
+    {
+        System.out.println("Master printer");
+    }
+    
+    public void printDebugChildren()
+    {
+        for(Iterator<SceneNode> it = children.iterator(); it.hasNext();)
+        {
+            it.next().printDebug();
+            
+        }
+    }
+
+    public Vector2 getPosition()
+    {
+        Vector2 tmpPos = new Vector2(pos.x, pos.y);
+        return tmpPos;
+    }
+
+    public Vector2 getTilePosition()
+    {
+        Vector2 tmpPos = new Vector2(pos.x / tileSize, pos.y / tileSize);
+        return tmpPos;
+    }
+    
+    public int getTileSize()
+    {
+        return tileSize;
+    }
+    
+    public int getMapTileWidth()
+    {
+        return mapTileWidth;
+    }
+    
+    public int getMapTileHeight()
+    {
+        return mapTileHeight;
     }
 }
