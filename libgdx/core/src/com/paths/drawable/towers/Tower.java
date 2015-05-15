@@ -1,8 +1,10 @@
 package com.paths.drawable.towers;
 
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
+import com.badlogic.gdx.math.Vector2;
 import com.paths.constants.TextureConstants;
-import com.paths.drawable.MapNode;
+import com.paths.drawable.MyTexture;
 import com.paths.drawable.SceneNode;
 import com.paths.drawable.movable.Bullet;
 
@@ -49,24 +51,27 @@ public class Tower extends SceneNode
     protected int shootRadius;
     protected float shootDelay;
     protected TextureAtlas atlas;
-    protected MapNode map;
+    protected SceneNode map;
+    protected Bullet.Category bulletType;
     
     /*
      * Init needs to be called after this
      */
     public Tower() { }
     
-    public Tower(Category category, int mapWidth, int mapHeight, int tileSize, TextureAtlas atlas, MapNode map)
+    public Tower(Category category, int x, int y, int mapTileWidth, int mapTileHeight, int tileSize, TextureAtlas atlas, SceneNode map)
     {
         super();
-        init(category, mapWidth, mapHeight, tileSize, atlas, map);
+        init(category, x, y, mapTileWidth, mapTileHeight, tileSize, atlas, map);
     }
     
-    public void init(Category category, int mapWidth, int mapHeight, int tileSize, TextureAtlas atlas, MapNode map)
+    public void init(Category category, int x, int y, int mapTileWidth, int mapTileHeight, int tileSize, TextureAtlas atlas, SceneNode map)
     {
-        super.init(SceneNode.Category.NONE, mapWidth, mapHeight, tileSize, null, null);
+        System.out.println("(x,y) " + x + "," + y);
+        super.init(SceneNode.Category.NONE, mapTileWidth, mapTileHeight, tileSize, new Vector2(x,y), null);
         this.atlas = atlas;
         this.map = map;
+        sprite = new MyTexture(null, pos, new Vector2(15, 15), new Vector2(30, 30), new Vector2(1, 1), 0);
         setCategory(category);
     }
     
@@ -74,6 +79,27 @@ public class Tower extends SceneNode
     {
         shootRadius = category.getShootRadius();
         shootDelay = category.getShootDelay();
+        bulletType = category.getBulletType();
         sprite.setTexture(atlas.findRegion(category.getTextureKey()));
+    }
+    
+    public void attackTower(SceneNode node)
+    {
+        map.layerChildNode(new Bullet(bulletType, mapTileWidth, mapTileHeight, tileSize, atlas, this, node, map), 
+                SceneNode.get1d((int)pos.x/tileSize, (int)pos.y/tileSize, mapTileWidth));
+    }
+
+    @Override
+    public void drawCurrent(SpriteBatch batch)
+    {
+        Vector2 texturePos = sprite.getPos();
+        Vector2 origin = sprite.getOrigin();
+        Vector2 dimension = sprite.getDimension();
+        Vector2 scale = sprite.getScale();
+
+        batch.draw(sprite.getTexture(), texturePos.x, texturePos.y,
+                origin.x, origin.y, dimension.x, dimension.y,
+                scale.x, scale.y, sprite.getRotation(), sprite.getRegionX(), sprite.getRegionY(),
+                sprite.getRegionWidth(), sprite.getRegionHeight(), false, false);
     }
 }

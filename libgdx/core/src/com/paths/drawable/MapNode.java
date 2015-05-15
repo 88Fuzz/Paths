@@ -162,6 +162,6 @@ public class MapNode extends SceneNode
     @Override
     public void printDebugCurrent()
     {
-        System.out.println("tile number " + deleteMe);
+        //System.out.println("tile number " + deleteMe);
     }
 }

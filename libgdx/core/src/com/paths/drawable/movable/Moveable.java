@@ -1,5 +1,6 @@
 package com.paths.drawable.movable;
 
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Vector2;
 import com.paths.drawable.SceneNode;
 
@@ -23,7 +24,7 @@ public class Moveable extends SceneNode
         init(category, mapTileWidth, mapTileHeight, tileSize, map);
     }
 
-    private void init(Category category, int mapTileWidth, int mapTileHeight, int tileSize, SceneNode map)
+    public void init(Category category, int mapTileWidth, int mapTileHeight, int tileSize, SceneNode map)
     {
         super.init(category, mapTileWidth, mapTileHeight, tileSize, null, null);
         this.map = map;
@@ -31,6 +32,7 @@ public class Moveable extends SceneNode
         this.velocity = new Vector2(0,0);
         this.swap= false;
         this.tilePos = new Vector2();
+        System.out.println("FUCK MY ASS");
     }
 
     // TODO figure out how to implement this method
@@ -89,6 +91,7 @@ public class Moveable extends SceneNode
             //have to mark this for removal later cause of bullshit concurrent modification exceptions
             swap = true;
         }
+        sprite.setPos(pos);
     }
     
     public Vector2 getTilePos()
@@ -110,6 +113,20 @@ public class Moveable extends SceneNode
         return false;
     }
     
+    @Override
+    public void drawCurrent(SpriteBatch batch)
+    {
+        Vector2 texturePos = sprite.getPos();
+        Vector2 origin = sprite.getOrigin();
+        Vector2 dimension = sprite.getDimension();
+        Vector2 scale = sprite.getScale();
+
+        batch.draw(sprite.getTexture(), texturePos.x, texturePos.y,
+                origin.x, origin.y, dimension.x, dimension.y,
+                scale.x, scale.y, sprite.getRotation(), sprite.getRegionX(), sprite.getRegionY(),
+                sprite.getRegionWidth(), sprite.getRegionHeight(), false, false);
+    }
+
     @Override
     public void printDebugCurrent()
     {

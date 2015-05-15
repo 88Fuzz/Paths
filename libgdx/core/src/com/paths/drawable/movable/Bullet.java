@@ -4,13 +4,14 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.math.Vector2;
 import com.paths.constants.TextureConstants;
+import com.paths.drawable.MyTexture;
 import com.paths.drawable.SceneNode;
 
 public class Bullet extends Moveable
 {
     public enum Category
     {
-        BASIC(1.0f, TextureConstants.SIMPLE_BULLET_KEY, false);
+        BASIC(100.0f, TextureConstants.SIMPLE_BULLET_KEY, true);
         
         private float speed;
         private String textureKey;
@@ -49,14 +50,17 @@ public class Bullet extends Moveable
         init(category, mapTileWidth, mapTileHeight, tileSize, atlas, start, target, map);
     }
     
-        public void init(Category category, int mapTileWidth, int mapTileHeight, int tileSize, TextureAtlas atlas, SceneNode start, SceneNode target, SceneNode map)
+    public void init(Category category, int mapTileWidth, int mapTileHeight, int tileSize, TextureAtlas atlas, SceneNode start, SceneNode target, SceneNode map)
     {
-        super.init(SceneNode.Category.NONE, mapTileWidth, mapTileHeight, tileSize, null, null);
+        super.init(SceneNode.Category.NONE, mapTileWidth, mapTileHeight, tileSize, map);
         this.atlas = atlas;
         this.map = map;
         this.tilePos = start.getTilePosition();
         this.pos = start.getPosition();
         this.target = target;
+        //TODO make these values configurable based on bullet type. YO
+        this.sprite = new MyTexture(null, pos, new Vector2(15/2.0f, 15/2.0f), new Vector2(15, 15), new Vector2(1, 1), 0);
+//        this.sprite = new MyTexture(null, pos, new Vector2(150, 150), new Vector2(300, 300), new Vector2(1, 1), 0);
         setCategory(category);
         calculateVelocity();
     }
@@ -80,20 +84,6 @@ public class Bullet extends Moveable
         velocity.x = distance.x * maxVelocity;
         velocity.y = distance.y * maxVelocity;
         
-    }
-    
-    @Override
-    public void drawCurrent(SpriteBatch batch)
-    {
-        Vector2 texturePos = sprite.getPos();
-        Vector2 origin = sprite.getOrigin();
-        Vector2 dimension = sprite.getDimension();
-        Vector2 scale = sprite.getScale();
-
-        batch.draw(sprite.getTexture(), texturePos.x, texturePos.y,
-                origin.x, origin.y, dimension.x, dimension.y,
-                scale.x, scale.y, sprite.getRotation(), sprite.getRegionX(), sprite.getRegionY(),
-                sprite.getRegionWidth(), sprite.getRegionHeight(), false, false);
     }
     
     @Override

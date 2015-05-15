@@ -7,6 +7,7 @@ import java.util.LinkedList;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Vector2;
 import com.paths.drawable.movable.Mob;
+import com.paths.drawable.movable.Moveable;
 
 /*
  * Lowest level drawable object
@@ -37,10 +38,7 @@ public class SceneNode
     /*
      * This should only be used if you plan to call init() after!
      */
-    public SceneNode()
-    {
-        
-    }
+    public SceneNode() { }
 
     public SceneNode(Category category, int mapWidth, int mapHeight, int tileSize, Vector2 pos, MyTexture sprite)
     {
@@ -67,7 +65,6 @@ public class SceneNode
         if(children.size() < pos)
             return result;
         
-//        return children.get(pos).detachChild(node);
         return children.get(pos).detachChild(node);
     }
 
@@ -176,7 +173,7 @@ public class SceneNode
             {
                 it.remove();
                 
-                Vector2 tmpVector = ((Mob) node).getTilePos();
+                Vector2 tmpVector = ((Moveable) node).getTilePos();
                 superNode.layerChildNode(node, SceneNode.get1d((int)tmpVector.x, (int)tmpVector.y, mapTileWidth));
             }
         }
@@ -210,6 +207,12 @@ public class SceneNode
             return false;
 
         children.get(pos).attachChild(node);
+        return true;
+    }
+    
+    public boolean layerChildNode(SceneNode node)
+    {
+        attachChild(node);
         return true;
     }
 

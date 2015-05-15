@@ -15,6 +15,7 @@ import com.paths.drawable.MapNode;
 import com.paths.drawable.SceneNode;
 import com.paths.drawable.MapNode.Category;
 import com.paths.drawable.movable.Mob;
+import com.paths.drawable.towers.Tower;
 import com.paths.utils.GraphicsUtils;
 import com.paths.utils.PathGenerator;
 
@@ -29,6 +30,9 @@ public class GameState extends ApplicationAdapter implements InputProcessor
     private MapNode startNode;
     private MapNode endNode;
     private Vector2 windowTileSize;
+    
+    
+    private Tower tmpTower = null;
     // @Override
     // public void create() {
     // batch = new SpriteBatch();
@@ -119,12 +123,14 @@ public class GameState extends ApplicationAdapter implements InputProcessor
         if(keycode == Input.Keys.ENTER)
         {
             PathGenerator.findPath((MapNode) map, startNode, endNode, windowTileSize);
-            map.layerChildNode(
-                    new Mob(SceneNode.Category.NONE, atlas, (int)windowTileSize.x, (int)windowTileSize.y, tileSize, startNode, endNode, map),
-                    SceneNode.get1d((int)startNode.getTilePosition().x, (int)startNode.getTilePosition().y, (int)windowTileSize.x));
+            Mob tmp = 
+                    new Mob(SceneNode.Category.NONE, atlas, (int)windowTileSize.x, (int)windowTileSize.y, tileSize, startNode, endNode, map);
+            map.layerChildNode(tmp, SceneNode.get1d((int)startNode.getTilePosition().x, (int)startNode.getTilePosition().y, (int)windowTileSize.x));
+            if(tmpTower != null)
+                tmpTower.attackTower(tmp);
         }
             
-        map.printDebug();
+//        map.printDebug();
         return true;
     }
 
@@ -180,12 +186,21 @@ public class GameState extends ApplicationAdapter implements InputProcessor
     public boolean touchDragged(int screenX, int screenY, int pointer)
     {
         screenY = GraphicsUtils.flipY(screenY);
-        MapNode tile = (MapNode) map.getChildNode(SceneNode.get1d(screenX/tileSize, screenY/tileSize, (int)windowTileSize.x));
+        int oned = SceneNode.get1d(screenX/tileSize, screenY/tileSize, (int)windowTileSize.x);
+        MapNode tile = (MapNode) map.getChildNode(oned);
         if(tile == null)
             return true;
 
         if(tile.getType() != MapNode.Category.START && tile.getType() != MapNode.Category.END)
+        {
             tile.setType(squareType);
+
+            //Due to int math, /tileSize*tileSize will get us the position divisible by tileSize
+            if(tmpTower == null)
+                tmpTower = new Tower(Tower.Category.BLOCK, screenX/tileSize*tileSize, screenY/tileSize*tileSize, (int)windowTileSize.x, (int)windowTileSize.y, tileSize, atlas, map);
+
+            tile.layerChildNode(tmpTower);
+        }
         return true;
     }
 

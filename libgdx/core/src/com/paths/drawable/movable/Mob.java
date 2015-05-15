@@ -90,24 +90,9 @@ public class Mob extends Moveable
     }
 
     @Override
-    public void drawCurrent(SpriteBatch batch)
-    {
-        Vector2 texturePos = sprite.getPos();
-        Vector2 origin = sprite.getOrigin();
-        Vector2 dimension = sprite.getDimension();
-        Vector2 scale = sprite.getScale();
-
-        batch.draw(sprite.getTexture(), texturePos.x, texturePos.y,
-                origin.x, origin.y, dimension.x, dimension.y,
-                scale.x, scale.y, sprite.getRotation(), sprite.getRegionX(), sprite.getRegionY(),
-                sprite.getRegionWidth(), sprite.getRegionHeight(), false, false);
-    }
-
-    @Override
     protected void updateCurrent(SceneNode superNode, float dt)
     {
         super.updateCurrent(superNode, dt);
-        sprite.setPos(pos);
 
         float distance = velocity.x*dt * velocity.x*dt + velocity.y*dt * velocity.y*dt;
 
