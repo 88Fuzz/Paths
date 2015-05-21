@@ -58,7 +58,7 @@ public class MapNode extends SceneNode
     
     public void init(TextureAtlas atlas, int x, int y, int width, int height, int mapTileWidth, int mapTileHeight, int tileSize, Category type)
     {
-        super.init(SceneNode.Category.NONE, mapTileWidth, mapTileHeight, tileSize, null, null);
+        super.init(SceneNode.Category.NONE, mapTileWidth, mapTileHeight, tileSize, new Vector2(), null);
         deleteMe = new Vector2(x, y);
         pos = new Vector2(x * width,y * height);
         gValue = 0;

@@ -1,8 +1,10 @@
 package com.paths.drawable;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.Map;
 
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Vector2;
@@ -34,6 +36,8 @@ public class SceneNode
     protected int tileSize;
     protected Vector2 pos;
     protected MyTexture sprite;
+    protected Vector2 tilePos;
+    private HashMap<SceneNode, Integer> futureAddMap;
     
     /*
      * This should only be used if you plan to call init() after!
@@ -54,12 +58,20 @@ public class SceneNode
         this.mapTileWidth = mapTileWidth;
         this.mapTileHeight = mapTileHeight;
         this.pos = pos;
+        this.tilePos = new Vector2();
+        tilePos.x = pos.x / tileSize;
+        tilePos.y = pos.y / tileSize;
         this.sprite = sprite;
+        futureAddMap = new HashMap<SceneNode, Integer>();
+    }
+
+    public void futureLayerChildNode(SceneNode node, int pos)
+    {
+        futureAddMap.put(node, pos);
     }
 
     public SceneNode detachChild(SceneNode node, int pos)
     {
-        System.out.println("What is going on " + this + " " + node.toString());
         SceneNode result = null;
         
         if(children.size() < pos)
@@ -70,8 +82,6 @@ public class SceneNode
 
     public SceneNode detachChild(SceneNode node)
     {
-        System.out.println("looking for " + node.toString());
-        System.out.println("in " + this.toString());
         SceneNode result = null;
         for(Iterator<SceneNode> iterator = children.iterator(); iterator
                 .hasNext();)
@@ -154,6 +164,16 @@ public class SceneNode
         updateCurrent(superNode, dt);
         updateChildren(superNode, dt);
     }
+    
+    public void insertFutureAddMap()
+    {
+        for(Iterator<Map.Entry<SceneNode, Integer>> it = futureAddMap.entrySet().iterator(); it.hasNext();)
+        {
+            Map.Entry<SceneNode, Integer> entry = it.next();
+            layerChildNode(entry.getKey(), entry.getValue());
+            it.remove();
+        }
+    }
 
     protected void updateCurrent(SceneNode superNode, float dt)
     {
@@ -176,6 +196,8 @@ public class SceneNode
                 Vector2 tmpVector = ((Moveable) node).getTilePos();
                 superNode.layerChildNode(node, SceneNode.get1d((int)tmpVector.x, (int)tmpVector.y, mapTileWidth));
             }
+            else if(node.isDead())
+                it.remove();
         }
 //        for(SceneNode child : children)
 //        {
@@ -229,6 +251,12 @@ public class SceneNode
     public Category getCategory()
     {
         return type;
+    }
+    
+    public Vector2 getDimension()
+    {
+        //TODO things should have a different hitbox than drawing dimensions
+        return sprite.getDimension();
     }
     
     //TODO figure out how to implement this method
@@ -287,5 +315,15 @@ public class SceneNode
     public int getMapTileHeight()
     {
         return mapTileHeight;
+    }
+    
+    public int kill()
+    {
+        return 0;
+    }
+    
+    public boolean isDead()
+    {
+        return false;
     }
 }

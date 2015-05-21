@@ -1,6 +1,5 @@
 package com.paths.drawable.movable;
 
-import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.math.Vector2;
 import com.paths.constants.TextureConstants;
@@ -17,6 +16,8 @@ public class Mob extends Moveable
     //TODO fix these so that it can contain multiple parents and currents!
     private MapNode parentNode;
     private MapNode currentNode;
+    private int points;
+    private boolean dead;
 
     public Mob(Category category, TextureAtlas atlas, int mapWidth, int mapHeight, int tileSize, MapNode start, MapNode end, SceneNode map)
     {
@@ -30,7 +31,7 @@ public class Mob extends Moveable
         this.startNode = start;
         this.endNode = end;
         this.map = map;
-        this.maxVelocity = 180;
+        this.maxVelocity = 100;
         this.parentNode = start;
         this.currentNode = start;
         this.distanceToTravel = 0;
@@ -39,6 +40,10 @@ public class Mob extends Moveable
         pos = startNode.getPosition();
 //        pos = startNode.getCenteredPosition();
 
+        //TODO Create an enum with these properties
+        //TODO and this score
+        points = 500;
+        dead = false;
         sprite = new MyTexture(atlas.findRegion(TextureConstants.CIRCLE_KEY), pos, new Vector2(15, 15), new Vector2(30, 30), new Vector2(1, 1), 0);
         calculateVelocity();
     }
@@ -48,14 +53,14 @@ public class Mob extends Moveable
     {
         super.dispose();
     }
-
+    
     private void calculateVelocity()
     {
         MapNode nextNode;
+
         if(currentNode == endNode)
         {
             tilePos = startNode.getTilePosition();
-//            pos = startNode.getCenteredPosition();
             pos = startNode.getPosition();
 
             sprite.setPos(pos.x, pos.y);
@@ -63,7 +68,6 @@ public class Mob extends Moveable
         }
 
         nextNode = currentNode.getChildPathNode();
-//        Vector2 futurePos = nextNode.getCenteredPosition();
         Vector2 futurePos = nextNode.getPosition();
         futurePos.sub(pos);
         futurePos.nor();
@@ -93,6 +97,19 @@ public class Mob extends Moveable
     protected void updateCurrent(SceneNode superNode, float dt)
     {
         super.updateCurrent(superNode, dt);
+        
+        //TODO remove this stuff
+//        pos.x=0;
+//        pos.y=0;
+//        sprite.setPos(pos);
+//        tilePos.x = (int) pos.x / tileSize;
+//        tilePos.y = (int) pos.y / tileSize;
+
+//        if(tilePos.x - dimension.x/2 < pos.x + bulletDimension.x/2 &&
+//                tilePos.x + dimension.x/2 > pos.x - bulletDimension.x/2)
+//
+//       if(tilePos.y - dimension.y/2 < pos.y + bulletDimension.y/2 &&
+//       tilePos.y + dimension.y/2 > pos.y - bulletDimension.y/2)
 
         float distance = velocity.x*dt * velocity.x*dt + velocity.y*dt * velocity.y*dt;
 
@@ -102,5 +119,18 @@ public class Mob extends Moveable
         {
             calculateVelocity();
         }
+    }
+    
+    @Override
+    public int kill()
+    {
+        dead = true;
+        return points;
+    }
+    
+    @Override
+    public boolean isDead()
+    {
+        return dead;
     }
 }

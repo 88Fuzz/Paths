@@ -10,7 +10,6 @@ public class Moveable extends SceneNode
     protected float maxVelocity;
     protected Vector2 velocity;
     protected SceneNode map;
-    protected Vector2 tilePos;
     private boolean swap;
     
     /*
@@ -26,13 +25,11 @@ public class Moveable extends SceneNode
 
     public void init(Category category, int mapTileWidth, int mapTileHeight, int tileSize, SceneNode map)
     {
-        super.init(category, mapTileWidth, mapTileHeight, tileSize, null, null);
+        super.init(category, mapTileWidth, mapTileHeight, tileSize, new Vector2(), null);
         this.map = map;
         this.tileSize = tileSize;
         this.velocity = new Vector2(0,0);
         this.swap= false;
-        this.tilePos = new Vector2();
-        System.out.println("FUCK MY ASS");
     }
 
     // TODO figure out how to implement this method

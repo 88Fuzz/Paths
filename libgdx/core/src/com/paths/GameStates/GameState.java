@@ -5,34 +5,32 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.assets.AssetManager;
-import com.badlogic.gdx.graphics.GL20;
-import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.math.Vector2;
 import com.paths.constants.TextureConstants;
 import com.paths.drawable.MapNode;
 import com.paths.drawable.SceneNode;
-import com.paths.drawable.MapNode.Category;
 import com.paths.drawable.movable.Mob;
 import com.paths.drawable.towers.Tower;
+import com.paths.rendering.WorldRenderer;
 import com.paths.utils.GraphicsUtils;
 import com.paths.utils.PathGenerator;
 
 public class GameState extends ApplicationAdapter implements InputProcessor
 {
+    private WorldRenderer worldRenderer;
     private SceneNode map;
     private int tileSize;
     private TextureAtlas atlas;
-    private SpriteBatch batch;
     private AssetManager assMan;
     private MapNode.Category squareType;
     private MapNode startNode;
     private MapNode endNode;
     private Vector2 windowTileSize;
+    private Vector2 cameraMove;
+    private float time;
+    private static final float CAMERA_MOVE_CONSTANT = 1.5f;
     
-    
-    private Tower tmpTower = null;
     // @Override
     // public void create() {
     // batch = new SpriteBatch();
@@ -55,7 +53,6 @@ public class GameState extends ApplicationAdapter implements InputProcessor
 		assMan.load(TextureConstants.TILE_TEXTURES, TextureAtlas.class);
 		assMan.finishLoading();
 		atlas = assMan.get(TextureConstants.TILE_TEXTURES);
-		batch = new SpriteBatch();
         tileSize = 30;
         windowTileSize = new Vector2();
         windowTileSize.x = Gdx.graphics.getWidth() / tileSize;
@@ -64,6 +61,7 @@ public class GameState extends ApplicationAdapter implements InputProcessor
         squareType = MapNode.Category.START;
         startNode = null;
         endNode = null;
+        time = 1;
         
         for(int j = 0; j < windowTileSize.y; j++)
         {
@@ -72,6 +70,8 @@ public class GameState extends ApplicationAdapter implements InputProcessor
                 map.attachChild(new MapNode(atlas, i, j, tileSize, tileSize, (int)windowTileSize.x, (int)windowTileSize.y, tileSize, MapNode.Category.REGULAR));
             }
         }
+        worldRenderer = new WorldRenderer(map);
+        cameraMove = new Vector2();
         
         Gdx.input.setInputProcessor(this);
     }
@@ -93,13 +93,27 @@ public class GameState extends ApplicationAdapter implements InputProcessor
     @Override
     public void render()
     {
+        worldRenderer.moveCamera(cameraMove);
+        worldRenderer.render();
+
         //TODO add the while buffer in case dt gets waaaaay too large
-        map.update(map, Gdx.graphics.getDeltaTime());
-		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
-		//TODO figure out if the batch.begin()/batch.end() should be moved to the individual draw methods?
-		batch.begin();
-        map.draw(batch);
-        batch.end();
+        float dt = Gdx.graphics.getDeltaTime();
+        map.update(map, dt);
+        //This is a stupid hack to add sceneNodes to the map without getting concurent modification blah blah exception
+        map.insertFutureAddMap();
+
+        time -= dt;
+        if(time < 0)
+        {
+            if(squareType == MapNode.Category.BLOCK)
+            {
+                PathGenerator.findPath((MapNode) map, startNode, endNode, windowTileSize);
+                Mob tmp = 
+                    new Mob(SceneNode.Category.NONE, atlas, (int)windowTileSize.x, (int)windowTileSize.y, tileSize, startNode, endNode, map);
+                map.layerChildNode(tmp, SceneNode.get1d((int)startNode.getTilePosition().x, (int)startNode.getTilePosition().y, (int)windowTileSize.x));
+            }
+            time = 1;
+        }
     }
 
     @Override
@@ -120,24 +134,48 @@ public class GameState extends ApplicationAdapter implements InputProcessor
     @Override
     public boolean keyDown(int keycode)
     {
-        if(keycode == Input.Keys.ENTER)
+        switch(keycode)
         {
+        case Input.Keys.ENTER:
             PathGenerator.findPath((MapNode) map, startNode, endNode, windowTileSize);
             Mob tmp = 
                     new Mob(SceneNode.Category.NONE, atlas, (int)windowTileSize.x, (int)windowTileSize.y, tileSize, startNode, endNode, map);
             map.layerChildNode(tmp, SceneNode.get1d((int)startNode.getTilePosition().x, (int)startNode.getTilePosition().y, (int)windowTileSize.x));
-            if(tmpTower != null)
-                tmpTower.attackTower(tmp);
+            break;
+        case Input.Keys.LEFT:
+            cameraMove.x += CAMERA_MOVE_CONSTANT;
+            break;
+        case Input.Keys.RIGHT:
+            cameraMove.x -= CAMERA_MOVE_CONSTANT;
+            break;
+        case Input.Keys.UP:
+            cameraMove.y -= CAMERA_MOVE_CONSTANT;
+            break;
+        case Input.Keys.DOWN:
+            cameraMove.y += CAMERA_MOVE_CONSTANT;
+            break;
         }
-            
-//        map.printDebug();
         return true;
     }
 
     @Override
     public boolean keyUp(int keycode)
     {
-        // TODO Auto-generated method stub
+        switch(keycode)
+        {
+        case Input.Keys.LEFT:
+            cameraMove.x -= CAMERA_MOVE_CONSTANT;
+            break;
+        case Input.Keys.RIGHT:
+            cameraMove.x += CAMERA_MOVE_CONSTANT;
+            break;
+        case Input.Keys.UP:
+            cameraMove.y += CAMERA_MOVE_CONSTANT;
+            break;
+        case Input.Keys.DOWN:
+            cameraMove.y -= CAMERA_MOVE_CONSTANT;
+            break;
+        }
         return false;
     }
 
@@ -151,10 +189,14 @@ public class GameState extends ApplicationAdapter implements InputProcessor
     @Override
     public boolean touchDown(int screenX, int screenY, int pointer, int button)
     {
-        screenY = GraphicsUtils.flipY(screenY);
-        MapNode tile = (MapNode) map.getChildNode(SceneNode.get1d(screenX/tileSize, screenY/tileSize, (int)windowTileSize.x));
-        
-        System.out.println("touched at x: " + screenX + " y: " + screenY + " 1d " +SceneNode.get1d(screenX/tileSize, screenY/tileSize, (int)windowTileSize.x));
+        Vector2 touch = GraphicsUtils.getNormalizedScreenTouch(screenX, screenY, worldRenderer.getCameraPosition());
+
+        if(touch.x < 0 || touch.x >= Gdx.graphics.getWidth()
+                || touch.y < 0 || touch.y >= Gdx.graphics.getHeight())
+            return true;
+
+        MapNode tile = (MapNode) map.getChildNode(SceneNode.get1d((int)touch.x/tileSize, (int)touch.y/tileSize, (int)windowTileSize.x));
+
         if(tile == null)
             return true;
         
@@ -175,6 +217,8 @@ public class GameState extends ApplicationAdapter implements InputProcessor
         }
         return true;
     }
+    
+
 
     @Override
     public boolean touchUp(int screenX, int screenY, int pointer, int button)
@@ -185,19 +229,24 @@ public class GameState extends ApplicationAdapter implements InputProcessor
     @Override
     public boolean touchDragged(int screenX, int screenY, int pointer)
     {
-        screenY = GraphicsUtils.flipY(screenY);
-        int oned = SceneNode.get1d(screenX/tileSize, screenY/tileSize, (int)windowTileSize.x);
+        Vector2 touch = GraphicsUtils.getNormalizedScreenTouch(screenX, screenY, worldRenderer.getCameraPosition());
+        
+        if(touch.x < 0 || touch.x >= Gdx.graphics.getWidth()
+                || touch.y < 0 || touch.y >= Gdx.graphics.getHeight())
+            return true;
+
+        int oned = SceneNode.get1d((int)touch.x/tileSize, (int)touch.y/tileSize, (int)windowTileSize.x);
         MapNode tile = (MapNode) map.getChildNode(oned);
         if(tile == null)
             return true;
 
-        if(tile.getType() != MapNode.Category.START && tile.getType() != MapNode.Category.END)
+        if(tile.getType() != MapNode.Category.START && tile.getType() != MapNode.Category.END && tile.getType() != MapNode.Category.BLOCK)
         {
             tile.setType(squareType);
 
             //Due to int math, /tileSize*tileSize will get us the position divisible by tileSize
-            if(tmpTower == null)
-                tmpTower = new Tower(Tower.Category.BLOCK, screenX/tileSize*tileSize, screenY/tileSize*tileSize, (int)windowTileSize.x, (int)windowTileSize.y, tileSize, atlas, map);
+            Tower tmpTower = new Tower(Tower.Category.BLOCK, (int)touch.x/tileSize*tileSize, (int)touch.y/tileSize*tileSize, 
+                    (int)windowTileSize.x, (int)windowTileSize.y, tileSize, atlas, map);
 
             tile.layerChildNode(tmpTower);
         }

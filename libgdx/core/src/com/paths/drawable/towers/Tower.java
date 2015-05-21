@@ -1,5 +1,8 @@
 package com.paths.drawable.towers;
 
+import java.util.Iterator;
+import java.util.LinkedList;
+
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.math.Vector2;
@@ -7,24 +10,27 @@ import com.paths.constants.TextureConstants;
 import com.paths.drawable.MyTexture;
 import com.paths.drawable.SceneNode;
 import com.paths.drawable.movable.Bullet;
+import com.paths.drawable.movable.Mob;
 
 public class Tower extends SceneNode
 {
     public enum Category
     {
-        BLOCK(1, 0.5f, TextureConstants.BLOCK_TILE_KEY, Bullet.Category.BASIC);
+        BLOCK(2, 1, 1, TextureConstants.BLOCK_TILE_KEY, Bullet.Category.BASIC);
         
         private int shootRadius;
+        private int maxBullets;
         private float shootDelay;
         private String textureKey;
         private Bullet.Category bulletType;
 
-        Category(int shootRadius, float shootDelay, String textureKey, Bullet.Category bulletType)
+        Category(int shootRadius, float shootDelay, int maxBullets, String textureKey, Bullet.Category bulletType)
         {
             this.shootRadius = shootRadius;
             this.shootDelay = shootDelay;
             this.textureKey = textureKey;
             this.bulletType = bulletType;
+            this.maxBullets = maxBullets;
         }
 
         public int getShootRadius()
@@ -42,6 +48,11 @@ public class Tower extends SceneNode
             return shootDelay;
         }
         
+        public int getMaxBullets()
+        {
+            return maxBullets;
+        }
+        
         public Bullet.Category getBulletType()
         {
             return bulletType;
@@ -49,10 +60,13 @@ public class Tower extends SceneNode
     }
     
     protected int shootRadius;
+    protected float maxShootDelay;
     protected float shootDelay;
     protected TextureAtlas atlas;
     protected SceneNode map;
     protected Bullet.Category bulletType;
+    private LinkedList<Bullet> freeBullets;
+    private LinkedList<Bullet> activeBullets;
     
     /*
      * Init needs to be called after this
@@ -67,26 +81,95 @@ public class Tower extends SceneNode
     
     public void init(Category category, int x, int y, int mapTileWidth, int mapTileHeight, int tileSize, TextureAtlas atlas, SceneNode map)
     {
-        System.out.println("(x,y) " + x + "," + y);
         super.init(SceneNode.Category.NONE, mapTileWidth, mapTileHeight, tileSize, new Vector2(x,y), null);
         this.atlas = atlas;
         this.map = map;
         sprite = new MyTexture(null, pos, new Vector2(15, 15), new Vector2(30, 30), new Vector2(1, 1), 0);
+        freeBullets = new LinkedList<Bullet>();
+        activeBullets = new LinkedList<Bullet>();
         setCategory(category);
     }
     
     protected void setCategory(Category category)
     {
         shootRadius = category.getShootRadius();
-        shootDelay = category.getShootDelay();
+        shootDelay = maxShootDelay = category.getShootDelay();
         bulletType = category.getBulletType();
         sprite.setTexture(atlas.findRegion(category.getTextureKey()));
+        for(int count = 0; count < category.getMaxBullets(); count++)
+        {
+            freeBullets.add(new Bullet());
+        }
     }
     
     public void attackTower(SceneNode node)
     {
-        map.layerChildNode(new Bullet(bulletType, mapTileWidth, mapTileHeight, tileSize, atlas, this, node, map), 
-                SceneNode.get1d((int)pos.x/tileSize, (int)pos.y/tileSize, mapTileWidth));
+        shootBullet(node);
+    }
+    
+    /*
+     * Used for homing bullets
+     */
+    private void shootBullet(SceneNode node)
+    {
+        if(freeBullets.size() == 0)
+            return;
+        
+        Bullet bullet = freeBullets.pop();
+        bullet.init(bulletType, mapTileWidth, mapTileHeight, tileSize, atlas, this, node, map);
+        map.futureLayerChildNode(bullet, SceneNode.get1d((int)tilePos.x, (int)tilePos.y, mapTileWidth));
+        activeBullets.add(bullet);
+    }
+    
+    @Override
+    protected void updateCurrent(SceneNode superNode, float dt)
+    {
+        Bullet bullet;
+        for(Iterator<Bullet> iterator = activeBullets.iterator(); iterator.hasNext();)
+        {
+            bullet = iterator.next();
+            if(bullet.isDead())
+            {
+                iterator.remove();
+                
+//                System.out.println(bullet.getPoints());
+                freeBullets.add(bullet);
+            }
+        }
+        
+        shootDelay -= dt;
+
+        if(freeBullets.size() == 0 || shootDelay > 0)
+            return;
+        
+        
+        //TODO towers should attack mobs that are closest to the exit
+        for(int i = (int) (tilePos.x -shootRadius); i < tilePos.x + shootRadius; i++)
+        {
+            for(int j = (int) (tilePos.y - shootRadius); j < tilePos.y + shootRadius; j++)
+            {
+
+                if(i < 0 || j < 0)
+                    continue;
+                else if(i > mapTileWidth - 1 || j > mapTileWidth -1)
+                    continue;
+                
+                SceneNode tileNode = map.getChildNode(SceneNode.get1d(i, j, mapTileWidth));
+                SceneNode child;
+                Iterator<SceneNode> it = tileNode.getChildenIterator();
+                while(it.hasNext())
+                {
+                    child = it.next();
+                    if(child instanceof Mob)
+                    {
+                        //Pass in child if it should follow mob
+                        shootBullet(tileNode);
+                        shootDelay = maxShootDelay;
+                        return;
+                    }
+                }
+            }
+        }
     }
 
     @Override
