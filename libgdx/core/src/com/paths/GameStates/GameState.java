@@ -10,6 +10,7 @@ import com.badlogic.gdx.math.Vector2;
 import com.paths.constants.TextureConstants;
 import com.paths.drawable.MapNode;
 import com.paths.drawable.SceneNode;
+import com.paths.drawable.movable.Bullet;
 import com.paths.drawable.movable.Mob;
 import com.paths.drawable.towers.Tower;
 import com.paths.rendering.WorldRenderer;
@@ -30,6 +31,7 @@ public class GameState extends ApplicationAdapter implements InputProcessor
     private Vector2 cameraMove;
     private float time;
     private static final float CAMERA_MOVE_CONSTANT = 1.5f;
+    
     
     // @Override
     // public void create() {
@@ -108,8 +110,8 @@ public class GameState extends ApplicationAdapter implements InputProcessor
             if(squareType == MapNode.Category.BLOCK)
             {
                 PathGenerator.findPath((MapNode) map, startNode, endNode, windowTileSize);
-                Mob tmp = 
-                    new Mob(SceneNode.Category.NONE, atlas, (int)windowTileSize.x, (int)windowTileSize.y, tileSize, startNode, endNode, map);
+                Mob tmp = new Mob(Mob.Category.BASIC, atlas, (int)windowTileSize.x, (int)windowTileSize.y, tileSize, startNode, endNode, map);
+//                Bullet tmp = new Bullet(Bullet.Category.BASIC, (int)windowTileSize.x, (int)windowTileSize.y, tileSize, atlas, startNode, endNode, map);
                 map.layerChildNode(tmp, SceneNode.get1d((int)startNode.getTilePosition().x, (int)startNode.getTilePosition().y, (int)windowTileSize.x));
             }
             time = 1;
@@ -139,7 +141,7 @@ public class GameState extends ApplicationAdapter implements InputProcessor
         case Input.Keys.ENTER:
             PathGenerator.findPath((MapNode) map, startNode, endNode, windowTileSize);
             Mob tmp = 
-                    new Mob(SceneNode.Category.NONE, atlas, (int)windowTileSize.x, (int)windowTileSize.y, tileSize, startNode, endNode, map);
+                    new Mob(Mob.Category.BASIC, atlas, (int)windowTileSize.x, (int)windowTileSize.y, tileSize, startNode, endNode, map);
             map.layerChildNode(tmp, SceneNode.get1d((int)startNode.getTilePosition().x, (int)startNode.getTilePosition().y, (int)windowTileSize.x));
             break;
         case Input.Keys.LEFT:

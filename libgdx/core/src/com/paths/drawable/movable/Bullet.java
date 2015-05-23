@@ -12,19 +12,23 @@ public class Bullet extends Moveable
 {
     public enum Category
     {
-        BASIC(180.0f, 60, true, TextureConstants.SIMPLE_BULLET_KEY);
+        BASIC(180.0f, 60, 20, new Vector2(15, 15), true, TextureConstants.SIMPLE_BULLET_KEY);
         
         private float speed;
         private String textureKey;
         private boolean followTarget;
         private int maxTravelDistance;
+        private int damage;
+        private Vector2 dimension;
         
-        Category(float speed, int maxTravelDistance, boolean followTarget, String textureKey)
+        Category(float speed, int maxTravelDistance, int damage, Vector2 dimension, boolean followTarget, String textureKey)
         {
             this.speed = speed;
             this.textureKey = textureKey;
             this.followTarget = followTarget;
             this.maxTravelDistance = maxTravelDistance;
+            this.dimension = dimension;
+            this.damage = damage;
         }
         
         public int getMaxTravelDistance()
@@ -46,6 +50,16 @@ public class Bullet extends Moveable
         {
             return followTarget;
         }
+        
+        public Vector2 getDimension()
+        {
+            return dimension;
+        }
+        
+        public int getDamage()
+        {
+            return damage;
+        }
     }
 
     private TextureAtlas atlas;
@@ -53,12 +67,10 @@ public class Bullet extends Moveable
     private boolean followTarget;
     private boolean dead;
     private int points;
+    private int damage;
     private float distanceToTravel;
     
-    public Bullet()
-    {
-        
-    }
+    public Bullet() { }
 
     public Bullet(Category category, int mapTileWidth, int mapTileHeight, int tileSize, TextureAtlas atlas, SceneNode start, SceneNode target, SceneNode map)
     {
@@ -74,10 +86,14 @@ public class Bullet extends Moveable
         this.atlas = atlas;
         this.map = map;
         this.tilePos = start.getTilePosition();
-        this.pos = start.getPosition();
+        this.pos = start.getCenteredPosition();
+        this.pos.x -= category.getDimension().x/2;
+        this.pos.y -= category.getDimension().y/2;
+
         this.target = target;
         //TODO make these values configurable based on bullet type. YO
-        this.sprite = new MyTexture(null, pos, new Vector2(15/2.0f, 15/2.0f), new Vector2(15, 15), new Vector2(1, 1), 0);
+        sprite = new MyTexture(atlas.findRegion(category.getTextureKey()), pos, new Vector2(15/2.0f, 15/2.0f), new Vector2(15, 15), new Vector2(1, 1), 0);
+//        sprite = new MyTexture(atlas.findRegion(category.getTextureKey()), pos, new Vector2(15, 15), new Vector2(30, 30), new Vector2(1, 1), 0);
         setCategory(category);
         calculateVelocity();
     }
@@ -85,9 +101,9 @@ public class Bullet extends Moveable
     protected void setCategory(Category category)
     {
         maxVelocity = category.getSpeed();
-        sprite.setTexture(atlas.findRegion(category.getTextureKey()));
         followTarget = category.followTarget;
         distanceToTravel = category.getMaxTravelDistance();
+        damage = category.getDamage();
     }
     
     private void calculateVelocity()
@@ -95,7 +111,7 @@ public class Bullet extends Moveable
         if(target == null)
             return;
         
-        Vector2 distance = target.getPosition();
+        Vector2 distance = target.getCenteredPosition();
         
         distance.sub(pos);
         distance.nor();
@@ -180,7 +196,7 @@ public class Bullet extends Moveable
                             nodePos.y + dimension.y > pos.y)
                     {
                         dead = true;
-                        points = tileNode.kill();
+                        points = ((Mob)tileNode).attack(damage);
                     }
                 }
             }

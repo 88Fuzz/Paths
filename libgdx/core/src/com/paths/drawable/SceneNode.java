@@ -295,6 +295,17 @@ public class SceneNode
         Vector2 tmpPos = new Vector2(pos.x, pos.y);
         return tmpPos;
     }
+    
+    public Vector2 getCenteredPosition()
+    {
+        if(sprite == null)
+            return getPosition();
+        
+        Vector2 dim = sprite.getDimension();
+        
+        Vector2 tmpPos = new Vector2(pos.x + dim.x/2, pos.y + dim.y/2);
+        return tmpPos;
+    }
 
     public Vector2 getTilePosition()
     {

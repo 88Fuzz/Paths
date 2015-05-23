@@ -97,11 +97,11 @@ public class MapNode extends SceneNode
         return nodeType;
     }
 
-    public Vector2 getCenteredPosition()
-    {
-        Vector2 tmpPos = new Vector2(pos.x + mapTileWidth/2, pos.y + mapTileHeight/2);
-        return tmpPos;
-    }
+//    public Vector2 getCenteredPosition()
+//    {
+//        Vector2 tmpPos = new Vector2(pos.x + mapTileWidth/2, pos.y + mapTileHeight/2);
+//        return tmpPos;
+//    }
 
     //gValue + hValue
     public float getFValue()

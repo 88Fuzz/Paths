@@ -19,4 +19,7 @@ public class TextureConstants
     
     //Bullets
     public static final String SIMPLE_BULLET_KEY = "SimpleBullet";
+    
+    //Health
+    public static final String HEALTH_PIXEL = "HealthPixel";
 }
