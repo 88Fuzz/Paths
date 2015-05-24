@@ -88,7 +88,7 @@ public class Moveable extends SceneNode
             //have to mark this for removal later cause of bullshit concurrent modification exceptions
             swap = true;
         }
-        sprite.setPos(pos);
+        sprite.setPosition(pos.x, pos.y);
     }
     
     public Vector2 getTilePos()
@@ -113,15 +113,16 @@ public class Moveable extends SceneNode
     @Override
     public void drawCurrent(SpriteBatch batch)
     {
-        Vector2 texturePos = sprite.getPos();
-        Vector2 origin = sprite.getOrigin();
-        Vector2 dimension = sprite.getDimension();
-        Vector2 scale = sprite.getScale();
-
-        batch.draw(sprite.getTexture(), texturePos.x, texturePos.y,
-                origin.x, origin.y, dimension.x, dimension.y,
-                scale.x, scale.y, sprite.getRotation(), sprite.getRegionX(), sprite.getRegionY(),
-                sprite.getRegionWidth(), sprite.getRegionHeight(), false, false);
+        sprite.draw(batch);
+//        Vector2 texturePos = sprite.getPos();
+//        Vector2 origin = sprite.getOrigin();
+//        Vector2 dimension = sprite.getDimension();
+//        Vector2 scale = sprite.getScale();
+//
+//        batch.draw(sprite.getTexture(), texturePos.x, texturePos.y,
+//                origin.x, origin.y, dimension.x, dimension.y,
+//                scale.x, scale.y, sprite.getRotation(), sprite.getRegionX(), sprite.getRegionY(),
+//                sprite.getRegionWidth(), sprite.getRegionHeight(), false, false);
     }
 
     @Override

@@ -2,6 +2,7 @@ package com.paths.drawable.movable;
 
 import java.util.Iterator;
 
+import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.math.Vector2;
 import com.paths.constants.TextureConstants;
@@ -92,8 +93,9 @@ public class Bullet extends Moveable
 
         this.target = target;
         //TODO make these values configurable based on bullet type. YO
-        sprite = new MyTexture(atlas.findRegion(category.getTextureKey()), pos, new Vector2(15/2.0f, 15/2.0f), new Vector2(15, 15), new Vector2(1, 1), 0);
-//        sprite = new MyTexture(atlas.findRegion(category.getTextureKey()), pos, new Vector2(15, 15), new Vector2(30, 30), new Vector2(1, 1), 0);
+//        sprite = new MyTexture(atlas.findRegion(category.getTextureKey()), pos, new Vector2(15/2.0f, 15/2.0f), new Vector2(15, 15), new Vector2(1, 1), 0);
+        sprite = new Sprite(atlas.findRegion(category.getTextureKey()));
+        sprite.setPosition(pos.x, pos.y);
         setCategory(category);
         calculateVelocity();
     }
@@ -197,6 +199,7 @@ public class Bullet extends Moveable
                     {
                         dead = true;
                         points = ((Mob)tileNode).attack(damage);
+                        return dead;
                     }
                 }
             }

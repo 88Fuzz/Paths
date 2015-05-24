@@ -3,14 +3,15 @@ package com.paths.drawable.towers;
 import java.util.Iterator;
 import java.util.LinkedList;
 
+import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.math.Vector2;
 import com.paths.constants.TextureConstants;
-import com.paths.drawable.MyTexture;
 import com.paths.drawable.SceneNode;
 import com.paths.drawable.movable.Bullet;
 import com.paths.drawable.movable.Mob;
+import com.paths.utils.GraphicsUtils;
 
 public class Tower extends SceneNode
 {
@@ -84,7 +85,9 @@ public class Tower extends SceneNode
         super.init(SceneNode.Category.NONE, mapTileWidth, mapTileHeight, tileSize, new Vector2(x,y), null);
         this.atlas = atlas;
         this.map = map;
-        sprite = new MyTexture(null, pos, new Vector2(15, 15), new Vector2(30, 30), new Vector2(1, 1), 0);
+        sprite = new Sprite();
+        sprite.setPosition(pos.x, pos.y);
+
         freeBullets = new LinkedList<Bullet>();
         activeBullets = new LinkedList<Bullet>();
         setCategory(category);
@@ -95,7 +98,7 @@ public class Tower extends SceneNode
         shootRadius = category.getShootRadius();
         shootDelay = maxShootDelay = category.getShootDelay();
         bulletType = category.getBulletType();
-        sprite.setTexture(atlas.findRegion(category.getTextureKey()));
+        GraphicsUtils.applyTextureRegion(sprite, atlas.findRegion(category.getTextureKey()));
         for(int count = 0; count < category.getMaxBullets(); count++)
         {
             freeBullets.add(new Bullet());
@@ -144,14 +147,15 @@ public class Tower extends SceneNode
         
         
         //TODO towers should attack mobs that are closest to the exit
-        for(int i = (int) (tilePos.x -shootRadius); i < tilePos.x + shootRadius; i++)
+        for(int i = (int) (tilePos.x -shootRadius); i <= tilePos.x + shootRadius; i++)
         {
-            for(int j = (int) (tilePos.y - shootRadius); j < tilePos.y + shootRadius; j++)
+            for(int j = (int) (tilePos.y - shootRadius); j <= tilePos.y + shootRadius; j++)
             {
-
                 if(i < 0 || j < 0)
                     continue;
                 else if(i > mapTileWidth - 1 || j > mapTileWidth -1)
+                    continue;
+                else if(i == tilePos.x && j == tilePos.y)
                     continue;
                 
                 SceneNode tileNode = map.getChildNode(SceneNode.get1d(i, j, mapTileWidth));
@@ -175,14 +179,15 @@ public class Tower extends SceneNode
     @Override
     public void drawCurrent(SpriteBatch batch)
     {
-        Vector2 texturePos = sprite.getPos();
-        Vector2 origin = sprite.getOrigin();
-        Vector2 dimension = sprite.getDimension();
-        Vector2 scale = sprite.getScale();
-
-        batch.draw(sprite.getTexture(), texturePos.x, texturePos.y,
-                origin.x, origin.y, dimension.x, dimension.y,
-                scale.x, scale.y, sprite.getRotation(), sprite.getRegionX(), sprite.getRegionY(),
-                sprite.getRegionWidth(), sprite.getRegionHeight(), false, false);
+        sprite.draw(batch);
+//        Vector2 texturePos = sprite.getPos();
+//        Vector2 origin = sprite.getOrigin();
+//        Vector2 dimension = sprite.getDimension();
+//        Vector2 scale = sprite.getScale();
+//
+//        batch.draw(sprite.getTexture(), texturePos.x, texturePos.y,
+//                origin.x, origin.y, dimension.x, dimension.y,
+//                scale.x, scale.y, sprite.getRotation(), sprite.getRegionX(), sprite.getRegionY(),
+//                sprite.getRegionWidth(), sprite.getRegionHeight(), false, false);
     }
 }

@@ -1,15 +1,23 @@
 package com.paths.rendering;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.Texture.TextureFilter;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Disposable;
+import com.paths.constants.TextureConstants;
+import com.paths.drawable.FuckMe;
+import com.paths.drawable.MyTexture;
 import com.paths.drawable.SceneNode;
+import com.paths.utils.GraphicsUtils;
 
 public class WorldRenderer implements Disposable
 {
@@ -34,6 +42,7 @@ public class WorldRenderer implements Disposable
         batch = new SpriteBatch();
         camera = new OrthographicCamera(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
         camera.position.set(0 + Gdx.graphics.getWidth()/2, 0 + Gdx.graphics.getHeight()/2, 0);
+//        camera.position.set(0,0,0);
         camera.update();
 //        cameraGUI = new OrthographicCamera(Constants.VIEWPORT_GUI_WIDTH, Constants.VIEWPORT_GUI_HEIGHT);
         cameraGUI = new OrthographicCamera(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
@@ -55,6 +64,7 @@ public class WorldRenderer implements Disposable
         batch.setProjectionMatrix(camera.combined);
         batch.begin();
         map.draw(batch);
+
         renderGuiFpsCounter(batch);
 //        worldController.level.render(batch);
         batch.end();

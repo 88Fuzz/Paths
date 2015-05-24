@@ -6,6 +6,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Map;
 
+import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Vector2;
 import com.paths.drawable.movable.Mob;
@@ -35,7 +36,7 @@ public class SceneNode
     protected int mapTileHeight;
     protected int tileSize;
     protected Vector2 pos;
-    protected MyTexture sprite;
+    protected Sprite sprite;
     protected Vector2 tilePos;
     private HashMap<SceneNode, Integer> futureAddMap;
     
@@ -44,12 +45,12 @@ public class SceneNode
      */
     public SceneNode() { }
 
-    public SceneNode(Category category, int mapWidth, int mapHeight, int tileSize, Vector2 pos, MyTexture sprite)
+    public SceneNode(Category category, int mapWidth, int mapHeight, int tileSize, Vector2 pos, Sprite sprite)
     {
         init(category, mapWidth, mapHeight, tileSize, pos, sprite);
     }
 
-    public void init(Category category, int mapTileWidth, int mapTileHeight, int tileSize, Vector2 pos, MyTexture sprite)
+    public void init(Category category, int mapTileWidth, int mapTileHeight, int tileSize, Vector2 pos, Sprite sprite)
     {
         type = category;
         children = new ArrayList<SceneNode>();
@@ -256,7 +257,8 @@ public class SceneNode
     public Vector2 getDimension()
     {
         //TODO things should have a different hitbox than drawing dimensions
-        return sprite.getDimension();
+        return new Vector2(sprite.getWidth(), sprite.getHeight());
+//        return sprite.getDimension();
     }
     
     //TODO figure out how to implement this method
@@ -301,7 +303,7 @@ public class SceneNode
         if(sprite == null)
             return getPosition();
         
-        Vector2 dim = sprite.getDimension();
+        Vector2 dim = getDimension();
         
         Vector2 tmpPos = new Vector2(pos.x + dim.x/2, pos.y + dim.y/2);
         return tmpPos;

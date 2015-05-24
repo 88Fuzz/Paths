@@ -1,12 +1,15 @@
 package com.paths.drawable.movable;
 
+import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
+import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.paths.constants.TextureConstants;
 import com.paths.drawable.MapNode;
 import com.paths.drawable.MyTexture;
 import com.paths.drawable.SceneNode;
+import com.paths.utils.GraphicsUtils;
 
 public class Mob extends Moveable
 {
@@ -79,7 +82,7 @@ public class Mob extends Moveable
     private int health;
     private int maxHealth;
     private boolean dead;
-    private MyTexture healthBar;
+    private Sprite healthBar;
 
     public Mob(Mob.Category category, TextureAtlas atlas, int mapWidth, int mapHeight, int tileSize, MapNode start, MapNode end, SceneNode map)
     {
@@ -112,13 +115,10 @@ public class Mob extends Moveable
         health = maxHealth = category.getHealth();
         dead = false;
 
-        Vector2 origin = new Vector2(category.getDimension().x/2, category.getDimension().y/2);
-        sprite = new MyTexture(atlas.findRegion(category.getTextureKey()), pos, origin, category.getDimension(), new Vector2(1, 1), 0);
+        sprite = new Sprite(atlas.findRegion(category.getTextureKey()));
+        sprite.setPosition(pos.x, pos.y);
 
-        Vector2 healthPos = new Vector2(pos);
-        Vector2 healthDimension = new Vector2(category.getDimension());
-        healthDimension.y = 5;
-        healthBar = new MyTexture(atlas.findRegion(TextureConstants.HEALTH_PIXEL), healthPos, new Vector2(), healthDimension, new Vector2(1,1), 0);
+        healthBar = new Sprite(atlas.findRegion(TextureConstants.HEALTH_PIXEL));
         updateHealthBar();
 
         calculateVelocity();
@@ -139,7 +139,8 @@ public class Mob extends Moveable
             tilePos = startNode.getTilePosition();
             pos = startNode.getPosition();
 
-            sprite.setPos(pos.x, pos.y);
+//            sprite.setPos(pos.x, pos.y);
+            sprite.setPosition(pos.x, pos.y);
             currentNode = startNode;
         }
 
@@ -173,15 +174,17 @@ public class Mob extends Moveable
     {
         super.drawCurrent(batch);
         
-        Vector2 texturePos = healthBar.getPos();
-        Vector2 origin = healthBar.getOrigin();
-        Vector2 dimension = healthBar.getDimension();
-        Vector2 scale = healthBar.getScale();
-
-        batch.draw(healthBar.getTexture(), texturePos.x, texturePos.y,
-                origin.x, origin.y, dimension.x, dimension.y,
-                scale.x, scale.y, healthBar.getRotation(), healthBar.getRegionX(), healthBar.getRegionY(),
-                healthBar.getRegionWidth(), healthBar.getRegionHeight(), false, false);
+        healthBar.draw(batch);
+        
+//        Vector2 texturePos = healthBar.getPos();
+//        Vector2 origin = healthBar.getOrigin();
+//        Vector2 dimension = healthBar.getDimension();
+//        Vector2 scale = healthBar.getScale();
+//
+//        batch.draw(healthBar.getTexture(), texturePos.x, texturePos.y,
+//                origin.x, origin.y, dimension.x, dimension.y,
+//                scale.x, scale.y, healthBar.getRotation(), healthBar.getRegionX(), healthBar.getRegionY(),
+//                healthBar.getRegionWidth(), healthBar.getRegionHeight(), false, false);
     }
 
     @Override
@@ -215,14 +218,16 @@ public class Mob extends Moveable
     
     private void updateHealthBar()
     {
-        Vector2 tmp = healthBar.getPos();
-        Vector2 spriteDimension = new Vector2(sprite.getDimension());
-        tmp.y = sprite.getPos().y + spriteDimension.y + 5;
-        tmp.x = sprite.getPos().x;
+        Vector2 tmp = new Vector2();
+        Vector2 bounds = new Vector2();
+        Rectangle spriteRect = sprite.getBoundingRectangle();
+        tmp.y = spriteRect.y + spriteRect.height + 5;
+        tmp.x = spriteRect.x;
+        
         float percentHealth = (float)health / maxHealth;
-        spriteDimension.x *= percentHealth;
-        tmp = healthBar.getDimension();
-        tmp.x = spriteDimension.x;
+        bounds.x = spriteRect.width * percentHealth;
+        bounds.y = 5;
+        healthBar.setBounds(tmp.x, tmp.y, bounds.x, bounds.y);
     }
     
     @Override
@@ -234,7 +239,6 @@ public class Mob extends Moveable
 
     public int attack(int damage)
     {
-        System.out.println("health " + health + " damage " + damage);
         health -= damage;
         if(health <= 0)
             return kill();

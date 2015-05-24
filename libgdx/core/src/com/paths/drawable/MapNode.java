@@ -2,10 +2,12 @@ package com.paths.drawable;
 
 import java.util.Iterator;
 
+import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.math.Vector2;
 import com.paths.constants.TextureConstants;
+import com.paths.utils.GraphicsUtils;
 
 public class MapNode extends SceneNode
 {
@@ -66,7 +68,9 @@ public class MapNode extends SceneNode
         parentPathNode = null;
         childPathNode = null;
         this.atlas = atlas;
-        sprite = new MyTexture(null, pos, new Vector2(width/2, height/2),new Vector2(tileSize, tileSize), new Vector2(1,1), 0);
+//        sprite = new MyTexture(null, pos, new Vector2(width/2, height/2),new Vector2(tileSize, tileSize), new Vector2(1,1), 0);
+        sprite = new Sprite();
+        sprite.setPosition(pos.x, pos.y);
         setType(type);
     }
 
@@ -80,16 +84,18 @@ public class MapNode extends SceneNode
     {
         if(nodeType == Category.NONE)
             return;
+        
+        sprite.draw(batch);
 
-        Vector2 texturePos = sprite.getPos();
-        Vector2 origin = sprite.getOrigin();
-        Vector2 dimension = sprite.getDimension();
-        Vector2 scale = sprite.getScale();
-
-		batch.draw(sprite.getTexture(), texturePos.x, texturePos.y,
-		        origin.x, origin.y, dimension.x, dimension.y,
-		        scale.x, scale.y, sprite.getRotation(), sprite.getRegionX(), sprite.getRegionY(),
-		        sprite.getRegionWidth(), sprite.getRegionHeight(), false, false);
+//        Vector2 texturePos = sprite.getPos();
+//        Vector2 origin = sprite.getOrigin();
+//        Vector2 dimension = sprite.getDimension();
+//        Vector2 scale = sprite.getScale();
+//
+//		batch.draw(sprite.getTexture(), texturePos.x, texturePos.y,
+//		        origin.x, origin.y, dimension.x, dimension.y,
+//		        scale.x, scale.y, sprite.getRotation(), sprite.getRegionX(), sprite.getRegionY(),
+//		        sprite.getRegionWidth(), sprite.getRegionHeight(), false, false);
     }
 
     public Category getType()
@@ -151,7 +157,7 @@ public class MapNode extends SceneNode
     private void setTexture(MapNode.Category type)
     {
         if(atlas != null)
-            sprite.setTexture(atlas.findRegion(type.getTextureKey()));
+            GraphicsUtils.applyTextureRegion(sprite, atlas.findRegion(type.getTextureKey()));
     }
     
     public Iterator<SceneNode> getChildrenIterator()
