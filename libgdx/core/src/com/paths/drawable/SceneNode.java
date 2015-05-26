@@ -9,7 +9,6 @@ import java.util.Map;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Vector2;
-import com.paths.drawable.movable.Mob;
 import com.paths.drawable.movable.Moveable;
 
 /*
@@ -26,7 +25,7 @@ public class SceneNode
 
     public enum Category
     {
-        PARENT, MOB, NONE
+        PARENT, MOB, TOWER, NONE
     }
 
     private Category type;
@@ -79,6 +78,14 @@ public class SceneNode
             return result;
         
         return children.get(pos).detachChild(node);
+    }
+    
+    /*
+     * used if the object is touched/clicked on
+     */
+    public void touched()
+    {
+        //Do nothing by default
     }
 
     public SceneNode detachChild(SceneNode node)
@@ -218,10 +225,21 @@ public class SceneNode
         if(children.size() <= pos)
             return null;
 
-        if(children.get(pos).getCategory() == category)
+        if(children.get(pos).getCategory().equals(category))
             return children.get(pos);
 
-        return children.get(pos).getChildNode(pos, category);
+        return children.get(pos).getChildNodeByCategory(category);
+    }
+    
+    public SceneNode getChildNodeByCategory(Category category)
+    {
+        for(SceneNode child : children)
+        {
+            if(child.getCategory().equals(category))
+                return child;
+        }
+
+        return null;
     }
 
     public boolean layerChildNode(SceneNode node, int pos)

@@ -13,6 +13,7 @@ import com.paths.drawable.SceneNode;
 import com.paths.drawable.movable.Mob;
 import com.paths.drawable.towers.Tower;
 import com.paths.rendering.WorldRenderer;
+import com.paths.utils.CollisionDetection;
 import com.paths.utils.GraphicsUtils;
 import com.paths.utils.PathGenerator;
 
@@ -34,6 +35,9 @@ public class GameState extends ApplicationAdapter implements InputProcessor
     private int moveLeftMax;
     private int moveUpMin;
     private int moveDownMax;
+    private float timeSinceLastUpdate;
+    private Tower tmpTower;
+    private static final float TIMEPERFRAME = 1.0f/60.0f;
     
     
     // @Override
@@ -67,6 +71,8 @@ public class GameState extends ApplicationAdapter implements InputProcessor
         startNode = null;
         endNode = null;
         time = 1;
+        tmpTower = null;
+        timeSinceLastUpdate = 0;
         
         for(int j = 0; j < windowTileSize.y; j++)
         {
@@ -102,11 +108,21 @@ public class GameState extends ApplicationAdapter implements InputProcessor
     @Override
     public void render()
     {
-        worldRenderer.moveCamera(cameraMove);
-        worldRenderer.render();
-
-        //TODO add the while buffer in case dt gets waaaaay too large
         float dt = Gdx.graphics.getDeltaTime();
+        
+        timeSinceLastUpdate += dt;
+        while(timeSinceLastUpdate > TIMEPERFRAME)
+        {
+            timeSinceLastUpdate -= TIMEPERFRAME;
+            update(TIMEPERFRAME);
+        }
+//        update(dt);
+        worldRenderer.render();
+    }
+    
+    private void update(float dt)
+    {
+        worldRenderer.moveCamera(cameraMove);
         map.update(map, dt);
         //This is a stupid hack to add sceneNodes to the map without getting concurent modification blah blah exception
         map.insertFutureAddMap();
@@ -116,9 +132,7 @@ public class GameState extends ApplicationAdapter implements InputProcessor
         {
             if(squareType == MapNode.Category.BLOCK)
             {
-                PathGenerator.findPath((MapNode) map, startNode, endNode, windowTileSize);
                 Mob tmp = new Mob(Mob.Category.BASIC, atlas, (int)windowTileSize.x, (int)windowTileSize.y, tileSize, startNode, endNode, map);
-//                Bullet tmp = new Bullet(Bullet.Category.BASIC, (int)windowTileSize.x, (int)windowTileSize.y, tileSize, atlas, startNode, endNode, map);
                 map.layerChildNode(tmp, SceneNode.get1d((int)startNode.getTilePosition().x, (int)startNode.getTilePosition().y, (int)windowTileSize.x));
             }
             time = 1;
@@ -233,32 +247,127 @@ public class GameState extends ApplicationAdapter implements InputProcessor
 
         if(touch.x < 0 || touch.x >= Gdx.graphics.getWidth()
                 || touch.y < 0 || touch.y >= Gdx.graphics.getHeight())
+        {
+            removeTmpTower();
             return true;
+        }
 
-        MapNode tile = (MapNode) map.getChildNode(SceneNode.get1d((int)touch.x/tileSize, (int)touch.y/tileSize, (int)windowTileSize.x));
+        int oned = SceneNode.get1d((int)touch.x/tileSize, (int)touch.y/tileSize, (int)windowTileSize.x);
+        SceneNode tile = map.getChildNode(oned);
+        MapNode mapTile = (MapNode) tile;
 
         if(tile == null)
+        {
+            removeTmpTower();
             return true;
+        }
         
-        if(tile.getType() != MapNode.Category.BLOCKING)
+        if(mapTile.getType() != MapNode.Category.BLOCKING)
         {
             if(squareType == MapNode.Category.START)
             {
-                tile.setType(squareType);
+                mapTile.setType(squareType);
                 squareType = MapNode.Category.END;
-                startNode = tile;
+                startNode = mapTile;
             }
             else if(squareType == MapNode.Category.END)
             {
-                tile.setType(squareType);
+                mapTile.setType(squareType);
                 squareType = MapNode.Category.BLOCK;
-                endNode = tile;
+                endNode = mapTile;
+                PathGenerator.findPath((MapNode) map, startNode, endNode, windowTileSize);
+            }
+            else if(mapTile.getType() != MapNode.Category.START && mapTile.getType() != MapNode.Category.END)
+            {
+                if(mapTile.getType() != MapNode.Category.BLOCK)
+                {
+                    if(tmpTower == null)
+                    {
+                        //Due to int math, /tileSize*tileSize will get us the position divisible by tileSize
+                        tmpTower = new Tower(Tower.Category.BLOCK, (int)touch.x/tileSize*tileSize, (int)touch.y/tileSize*tileSize, 
+                                (int)windowTileSize.x, (int)windowTileSize.y, tileSize, atlas, map);
+
+                        tile.layerChildNode(tmpTower);
+                        return true;
+                    }
+                    else
+                    {
+                        Vector2 towerPos = tmpTower.getTilePosition();
+                        if(towerPos.x == (int)touch.x/tileSize && towerPos.y == (int)touch.y/tileSize)
+                        {
+                            mapTile.setType(squareType);
+                            if(validTowerPlacement(tile))
+                            {
+                                PathGenerator.findPath((MapNode) map, startNode, endNode, windowTileSize);
+                                tmpTower.touched();
+                                tmpTower = null;
+                                return true;
+                            }
+                            mapTile.setType(MapNode.Category.REGULAR);
+                        }
+                    }
+                }
             }
         }
+        removeTmpTower();
         return true;
     }
     
+    private void removeTmpTower()
+    {
+        if(tmpTower == null)
+            return;
+        
+        Vector2 towerTile = tmpTower.getTilePosition();
+        int oned = SceneNode.get1d((int)towerTile.x, (int)towerTile.y, (int)windowTileSize.x);
+        SceneNode node = map.getChildNode(oned);
+        node.detachChild(tmpTower);
+        tmpTower = null;
+    }
 
+    /*
+     * This method:
+     * checks if there is a mob in this square already
+     * verify that putting this tower down will not block the paths to the exit
+     * 
+     */
+    private boolean validTowerPlacement(SceneNode tile)
+    {
+        if(!verifyEmptyTile(tile))
+            return false;
+
+        if(PathGenerator.findPath((MapNode) map, startNode, endNode, windowTileSize))
+            return true;
+
+        return false;
+    }
+
+    private boolean verifyEmptyTile(SceneNode tile)
+    {
+        Vector2 tilePos = tile.getTilePosition();
+        SceneNode childNode;
+        
+        for(int i = (int)tilePos.x-1; i <= tilePos.x+1; i++)
+        {
+            for(int j = (int)tilePos.y-1; j <= tilePos.y+1; j++)
+            {
+                if(i < 0 || j < 0)
+                    continue;
+                else if(i > windowTileSize.x-1 || j > windowTileSize.y-1)
+                    continue;
+
+                int oned = SceneNode.get1d(i, j, (int)windowTileSize.x);
+                
+                if((childNode = map.getChildNode(oned, SceneNode.Category.MOB)) != null)
+                {
+                    if(CollisionDetection.checkCollision(tile, childNode))
+                        return false;
+                }
+            }
+        }
+        return true;
+        
+    }
 
     @Override
     public boolean touchUp(int screenX, int screenY, int pointer, int button)
@@ -269,28 +378,6 @@ public class GameState extends ApplicationAdapter implements InputProcessor
     @Override
     public boolean touchDragged(int screenX, int screenY, int pointer)
     {
-        Vector2 touch = GraphicsUtils.getNormalizedScreenTouch(screenX, screenY, worldRenderer.getCameraPosition());
-        
-        if(touch.x < 0 || touch.x >= Gdx.graphics.getWidth()
-                || touch.y < 0 || touch.y >= Gdx.graphics.getHeight())
-            return true;
-
-        int oned = SceneNode.get1d((int)touch.x/tileSize, (int)touch.y/tileSize, (int)windowTileSize.x);
-        MapNode tile = (MapNode) map.getChildNode(oned);
-        if(tile == null)
-            return true;
-
-        if(tile.getType() != MapNode.Category.START && tile.getType() != MapNode.Category.END && tile.getType() != MapNode.Category.BLOCK)
-        {
-            tile.setType(squareType);
-
-            //Due to int math, /tileSize*tileSize will get us the position divisible by tileSize
-            Tower tmpTower = new Tower(Tower.Category.BLOCK, (int)touch.x/tileSize*tileSize, (int)touch.y/tileSize*tileSize, 
-                    (int)windowTileSize.x, (int)windowTileSize.y, tileSize, atlas, map);
-            PathGenerator.findPath((MapNode) map, startNode, endNode, windowTileSize);
-
-            tile.layerChildNode(tmpTower);
-        }
         return true;
     }
 

@@ -24,14 +24,13 @@ public class PathGenerator
 
     public static boolean findPath(MapNode map, MapNode startNode, MapNode endNode, Vector2 windowTileSize)
     {
-//        MapNodeLink *openList = NULL;
-//        MapNodeLink *tmpNodeLink;
         MapNode currentNode;
         MapNode adjacentNode;
         Vector2 pos;
         Vector2 tilePos;
         int i, j;
         boolean finished = false;
+        boolean pathFound = true;
         MapNode.Category nodeType;
 
         //TODO do this step on level load????
@@ -43,6 +42,14 @@ public class PathGenerator
         {
             //Get node in open list with lowest fValue
             currentNode = openList.poll();
+
+            //it will be null if it is impossible to get to the finish
+            if(currentNode == null)
+            {
+                finished = true;
+                pathFound = false;
+                break;
+            }
 
             //We have found the end, We should end earlier than this though, if an adjacent square is the end
             if(currentNode == endNode)
@@ -116,14 +123,11 @@ public class PathGenerator
                 }
             }
         }
+
         openList.clear();
-        if(finished)
-        {
-            colorPath(startNode, endNode);
-            resetOpenClosed(map);
-            return true;
-        }
-        return false;
+        resetOpenClosed(map);
+        colorPath(startNode, endNode);
+        return pathFound;
     }
     
     public static void calulateGHValues(MapNode map, Vector2 endPosition, MapNode startNode, MapNode endNode)

@@ -1,3 +1,2 @@
 Starting and ending points next to eachother cause errors.
 Ending point up one and left one of start and a tower left of start causes bullet to float.
-If bullet goes from grass to tower it doesn't move into the tower tile????

@@ -3,40 +3,48 @@ package com.paths.drawable.towers;
 import java.util.Iterator;
 import java.util.LinkedList;
 
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
+import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.paths.constants.TextureConstants;
 import com.paths.drawable.SceneNode;
 import com.paths.drawable.movable.Bullet;
 import com.paths.drawable.movable.Mob;
-import com.paths.utils.GraphicsUtils;
 
 public class Tower extends SceneNode
 {
     public enum Category
     {
-        BLOCK(2, 1, 1, TextureConstants.BLOCK_TILE_KEY, Bullet.Category.BASIC);
+        BLOCK(2, 1, 3, 5, TextureConstants.BLOCK_TILE_KEY, Bullet.Category.BASIC);
         
         private int shootRadius;
         private int maxBullets;
         private float shootDelay;
+        private float buildSpeed;
         private String textureKey;
         private Bullet.Category bulletType;
 
-        Category(int shootRadius, float shootDelay, int maxBullets, String textureKey, Bullet.Category bulletType)
+        Category(int shootRadius, float shootDelay, int maxBullets, float buildSpeed, String textureKey, Bullet.Category bulletType)
         {
             this.shootRadius = shootRadius;
             this.shootDelay = shootDelay;
             this.textureKey = textureKey;
             this.bulletType = bulletType;
             this.maxBullets = maxBullets;
+            this.buildSpeed = buildSpeed;
         }
 
         public int getShootRadius()
         {
             return shootRadius;
+        }
+        
+        public float getBuildSpeed()
+        {
+            return buildSpeed;
         }
 
         public String getTextureKey()
@@ -60,14 +68,25 @@ public class Tower extends SceneNode
         }
     }
     
+    private enum State
+    {
+        INITIAL,
+        BUILDING,
+        ACTIVE;
+    }
+    
+    private static final float INITIAL_ALPHA = 0.2f;
     protected int shootRadius;
     protected float maxShootDelay;
     protected float shootDelay;
+    protected float buildSpeed;
     protected TextureAtlas atlas;
     protected SceneNode map;
     protected Bullet.Category bulletType;
     private LinkedList<Bullet> freeBullets;
     private LinkedList<Bullet> activeBullets;
+    private Sprite buildBar;
+    private State state;
     
     /*
      * Init needs to be called after this
@@ -82,11 +101,16 @@ public class Tower extends SceneNode
     
     public void init(Category category, int x, int y, int mapTileWidth, int mapTileHeight, int tileSize, TextureAtlas atlas, SceneNode map)
     {
-        super.init(SceneNode.Category.NONE, mapTileWidth, mapTileHeight, tileSize, new Vector2(x,y), null);
+        super.init(SceneNode.Category.TOWER, mapTileWidth, mapTileHeight, tileSize, new Vector2(x,y), null);
+        state = State.INITIAL;
         this.atlas = atlas;
         this.map = map;
-        sprite = new Sprite();
+        sprite = new Sprite(atlas.findRegion(category.getTextureKey()));
         sprite.setPosition(pos.x, pos.y);
+        sprite.setAlpha(INITIAL_ALPHA);
+        
+        buildBar = new Sprite(atlas.findRegion(TextureConstants.WHITE_PIXEL));
+        buildBar.setColor(1, 21f/255f, 21f/255f, 0);
 
         freeBullets = new LinkedList<Bullet>();
         activeBullets = new LinkedList<Bullet>();
@@ -98,7 +122,7 @@ public class Tower extends SceneNode
         shootRadius = category.getShootRadius();
         shootDelay = maxShootDelay = category.getShootDelay();
         bulletType = category.getBulletType();
-        GraphicsUtils.applyTextureRegion(sprite, atlas.findRegion(category.getTextureKey()));
+        buildSpeed = category.getBuildSpeed();
         for(int count = 0; count < category.getMaxBullets(); count++)
         {
             freeBullets.add(new Bullet());
@@ -122,11 +146,43 @@ public class Tower extends SceneNode
         bullet.init(bulletType, mapTileWidth, mapTileHeight, tileSize, atlas, this, node, map);
         map.futureLayerChildNode(bullet, SceneNode.get1d((int)tilePos.x, (int)tilePos.y, mapTileWidth));
         activeBullets.add(bullet);
+        shootDelay = maxShootDelay;
+    }
+    
+    @Override
+    public void touched()
+    {
+        if(state.equals(State.INITIAL))
+        {
+            sprite.setAlpha(0);
+            state = State.BUILDING;
+        }
     }
     
     @Override
     protected void updateCurrent(SceneNode superNode, float dt)
     {
+        if(state.equals(State.INITIAL))
+        {
+            buildBar.setAlpha(1);
+            return;
+        }
+        else if(state.equals(State.BUILDING))
+        {
+            Color color = sprite.getColor();
+            color.a += buildSpeed * dt;
+            if(color.a >= 1)
+            {
+                color.a = 1;
+                buildBar.setAlpha(0);
+                state = State.ACTIVE;
+            }
+            sprite.setColor(color);
+            updateBuildBar();
+
+            return;
+        }
+
         Bullet bullet;
         for(Iterator<Bullet> iterator = activeBullets.iterator(); iterator.hasNext();)
         {
@@ -134,8 +190,6 @@ public class Tower extends SceneNode
             if(bullet.isDead())
             {
                 iterator.remove();
-                
-//                System.out.println(bullet.getPoints());
                 freeBullets.add(bullet);
             }
         }
@@ -145,6 +199,8 @@ public class Tower extends SceneNode
         if(freeBullets.size() == 0 || shootDelay > 0)
             return;
         
+//        SceneNode deleteme = map.getChildNode(SceneNode.get1d((int)tilePos.x, (int)tilePos.y+1, mapTileWidth));
+//        shootBullet(deleteme);
         
         //TODO towers should attack mobs that are closest to the exit
         for(int i = (int) (tilePos.x -shootRadius); i <= tilePos.x + shootRadius; i++)
@@ -159,27 +215,39 @@ public class Tower extends SceneNode
                     continue;
                 
                 SceneNode tileNode = map.getChildNode(SceneNode.get1d(i, j, mapTileWidth));
-                SceneNode child;
-                Iterator<SceneNode> it = tileNode.getChildenIterator();
-                while(it.hasNext())
+                if(tileNode != null)
                 {
-                    child = it.next();
-                    if(child instanceof Mob)
+                    SceneNode child;
+                    Iterator<SceneNode> it = tileNode.getChildenIterator();
+                    while(it.hasNext())
                     {
-                        //Pass in child if it should follow mob
-                        shootBullet(tileNode);
-                        shootDelay = maxShootDelay;
-                        return;
+                        child = it.next();
+                        if(child instanceof Mob)
+                        {
+                            //Pass in child if it should follow mob
+                            shootBullet(tileNode);
+                            return;
+                        }
                     }
                 }
             }
         }
+    }
+    
+    public void updateBuildBar()
+    {
+        Color color = sprite.getColor();
+        Rectangle spriteBounds = sprite.getBoundingRectangle();
+        float percent = color.a / 1.0f;
+        int percentTop = (int) (spriteBounds.height * 5/30f);
+        buildBar.setBounds(spriteBounds.x, spriteBounds.y + spriteBounds.height - percentTop, spriteBounds.width * percent, percentTop);
     }
 
     @Override
     public void drawCurrent(SpriteBatch batch)
     {
         sprite.draw(batch);
+        buildBar.draw(batch);
 //        Vector2 texturePos = sprite.getPos();
 //        Vector2 origin = sprite.getOrigin();
 //        Vector2 dimension = sprite.getDimension();

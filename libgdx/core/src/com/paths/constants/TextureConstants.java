@@ -22,4 +22,7 @@ public class TextureConstants
     
     //Health
     public static final String HEALTH_PIXEL = "HealthPixel";
+    
+    //White pixel
+    public static final String WHITE_PIXEL = "WhitePixel";
 }

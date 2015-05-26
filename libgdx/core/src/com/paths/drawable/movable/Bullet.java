@@ -8,12 +8,13 @@ import com.badlogic.gdx.math.Vector2;
 import com.paths.constants.TextureConstants;
 import com.paths.drawable.MyTexture;
 import com.paths.drawable.SceneNode;
+import com.paths.utils.CollisionDetection;
 
 public class Bullet extends Moveable
 {
     public enum Category
     {
-        BASIC(180.0f, 60, 20, new Vector2(15, 15), true, TextureConstants.SIMPLE_BULLET_KEY);
+        BASIC(180.0f, 60, 20, new Vector2(15, 15), false, TextureConstants.SIMPLE_BULLET_KEY);
         
         private float speed;
         private String textureKey;
@@ -103,7 +104,7 @@ public class Bullet extends Moveable
     protected void setCategory(Category category)
     {
         maxVelocity = category.getSpeed();
-        followTarget = category.followTarget;
+        followTarget = category.isFollowTarget();
         distanceToTravel = category.getMaxTravelDistance();
         damage = category.getDamage();
     }
@@ -127,6 +128,7 @@ public class Bullet extends Moveable
         if(dead)
             return;
 
+        super.updateCurrent(superNode, dt);
         //Check for collisions
         SceneNode tileNode = map.getChildNode(SceneNode.get1d((int)tilePos.x, (int)tilePos.y, mapTileWidth));
         if(checkCollisions(tileNode))
@@ -165,8 +167,6 @@ public class Bullet extends Moveable
                 return;
         }
 
-        super.updateCurrent(superNode, dt);
-
         float distance = velocity.x*dt * velocity.x*dt + velocity.y*dt * velocity.y*dt;
         distanceToTravel -= Math.sqrt(distance);
         
@@ -188,19 +188,11 @@ public class Bullet extends Moveable
             tileNode = it.next();
             if(tileNode instanceof Mob)
             {
-                Vector2 nodePos = tileNode.getPosition();
-                Vector2 dimension = tileNode.getDimension();
-                Vector2 bulletDimension = getDimension();
-                if(nodePos.x < pos.x + bulletDimension.x &&
-                        nodePos.x + dimension.x > pos.x)
+                if(CollisionDetection.checkCollision(tileNode, this))
                 {
-                    if(nodePos.y < pos.y + bulletDimension.y &&
-                            nodePos.y + dimension.y > pos.y)
-                    {
-                        dead = true;
-                        points = ((Mob)tileNode).attack(damage);
-                        return dead;
-                    }
+                    dead = true;
+                    points = ((Mob)tileNode).attack(damage);
+                    return dead;
                 }
             }
         }

@@ -15,7 +15,7 @@ public class MapNode extends SceneNode
     {
         START(1<<0, TextureConstants.START_TILE_KEY),
         END(1<<1, TextureConstants.END_TILE_KEY),
-        BLOCK(1<<2, TextureConstants.BLOCK_TILE_KEY),
+        BLOCK(1<<2, TextureConstants.GRASS_TILE_KEY),
         REGULAR(1<<3, TextureConstants.GRASS_TILE_KEY),
         PATH(1<<4, TextureConstants.PATH_TILE_KEY),
         OPEN(1<<5, (TextureConstants.DEBUG) ? TextureConstants.OPEN_TILE_KEY: TextureConstants.GRASS_TILE_KEY),
@@ -50,7 +50,6 @@ public class MapNode extends SceneNode
     private MapNode parentPathNode;
     private MapNode childPathNode;
     private TextureAtlas atlas;
-    private Vector2 deleteMe;
 
     public MapNode(TextureAtlas atlas, int x, int y, int width, int height, int mapTileWidth, int mapTileHeight, int tileSize, Category type)
     {
@@ -61,14 +60,12 @@ public class MapNode extends SceneNode
     public void init(TextureAtlas atlas, int x, int y, int width, int height, int mapTileWidth, int mapTileHeight, int tileSize, Category type)
     {
         super.init(SceneNode.Category.NONE, mapTileWidth, mapTileHeight, tileSize, new Vector2(), null);
-        deleteMe = new Vector2(x, y);
         pos = new Vector2(x * width,y * height);
         gValue = 0;
         hValue = 0;
         parentPathNode = null;
         childPathNode = null;
         this.atlas = atlas;
-//        sprite = new MyTexture(null, pos, new Vector2(width/2, height/2),new Vector2(tileSize, tileSize), new Vector2(1,1), 0);
         sprite = new Sprite();
         sprite.setPosition(pos.x, pos.y);
         setType(type);

@@ -7,9 +7,7 @@ import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.paths.constants.TextureConstants;
 import com.paths.drawable.MapNode;
-import com.paths.drawable.MyTexture;
 import com.paths.drawable.SceneNode;
-import com.paths.utils.GraphicsUtils;
 
 public class Mob extends Moveable
 {
@@ -92,7 +90,7 @@ public class Mob extends Moveable
 
     public void init(Mob.Category category, TextureAtlas atlas, MapNode start, MapNode end, SceneNode map, int mapWidth, int mapHeight, int tileSize)
     {
-        super.init(SceneNode.Category.NONE, mapTileWidth, mapTileHeight, tileSize, map);
+        super.init(SceneNode.Category.MOB, mapTileWidth, mapTileHeight, tileSize, map);
         //TODO change this to have a configurable everything for when there are multiple types of mobs. YO
         this.startNode = start;
         this.endNode = end;
@@ -118,7 +116,8 @@ public class Mob extends Moveable
         sprite = new Sprite(atlas.findRegion(category.getTextureKey()));
         sprite.setPosition(pos.x, pos.y);
 
-        healthBar = new Sprite(atlas.findRegion(TextureConstants.HEALTH_PIXEL));
+        healthBar = new Sprite(atlas.findRegion(TextureConstants.WHITE_PIXEL));
+        healthBar.setColor(127f/255f, 231f/255f, 4f/255f, 1.0f);
         updateHealthBar();
 
         calculateVelocity();
