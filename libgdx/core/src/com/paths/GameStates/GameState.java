@@ -14,11 +14,19 @@ import com.paths.drawable.movable.Mob;
 import com.paths.drawable.towers.Tower;
 import com.paths.rendering.WorldRenderer;
 import com.paths.utils.CollisionDetection;
+import com.paths.utils.GameStats;
 import com.paths.utils.GraphicsUtils;
 import com.paths.utils.PathGenerator;
 
 public class GameState extends ApplicationAdapter implements InputProcessor
 {
+    private static final float CAMERA_MOVE_CONSTANT = 10.5f;
+    private static final float TIMEPERFRAME = 1.0f/60.0f;
+    private static final float ZOOM_CONSTANT = 1;
+    private static final float DEFAULT_CAMERA_ZOOM = 4;
+    
+    public static final GameStats stats = new GameStats(0,0,1.0f,1.0f);
+
     private WorldRenderer worldRenderer;
     private SceneNode map;
     private int tileSize;
@@ -28,16 +36,18 @@ public class GameState extends ApplicationAdapter implements InputProcessor
     private MapNode startNode;
     private MapNode endNode;
     private Vector2 windowTileSize;
+    private Vector2 windowPixelSize;
     private Vector2 cameraMove;
     private float time;
-    private static final float CAMERA_MOVE_CONSTANT = 1.5f;
     private int moveRightMin;
     private int moveLeftMax;
     private int moveUpMin;
     private int moveDownMax;
     private float timeSinceLastUpdate;
+    private float cameraZoom;
     private Tower tmpTower;
-    private static final float TIMEPERFRAME = 1.0f/60.0f;
+    private boolean zoomPreviously;
+    private float previousZoomDistance;
     
     
     // @Override
@@ -62,10 +72,17 @@ public class GameState extends ApplicationAdapter implements InputProcessor
 		assMan.load(TextureConstants.TILE_TEXTURES, TextureAtlas.class);
 		assMan.finishLoading();
 		atlas = assMan.get(TextureConstants.TILE_TEXTURES);
-        tileSize = 30;
-        windowTileSize = new Vector2();
-        windowTileSize.x = Gdx.graphics.getWidth() / tileSize;
-        windowTileSize.y = Gdx.graphics.getHeight() / tileSize;
+        tileSize = 200;
+        windowTileSize = new Vector2(30, 30);
+        windowPixelSize = new Vector2(windowTileSize);
+        windowPixelSize.scl(200);
+
+//        windowTileSize.x = Gdx.graphics.getWidth() / tileSize;
+//        windowTileSize.y = Gdx.graphics.getHeight() / tileSize;
+//        windowTileSize.x = 90 / tileSize;
+//        windowTileSize.y = 90 / tileSize;
+//        windowTileSize.x = 10;
+//        windowTileSize.y = 10;
         map = new MapNode(null, 0, 0, 0, 0, (int)windowTileSize.x, (int)windowTileSize.y, tileSize, MapNode.Category.NONE);
         squareType = MapNode.Category.START;
         startNode = null;
@@ -73,6 +90,9 @@ public class GameState extends ApplicationAdapter implements InputProcessor
         time = 1;
         tmpTower = null;
         timeSinceLastUpdate = 0;
+        cameraZoom = 0;
+        zoomPreviously = false;
+        previousZoomDistance = 0;
         
         for(int j = 0; j < windowTileSize.y; j++)
         {
@@ -81,7 +101,7 @@ public class GameState extends ApplicationAdapter implements InputProcessor
                 map.attachChild(new MapNode(atlas, i, j, tileSize, tileSize, (int)windowTileSize.x, (int)windowTileSize.y, tileSize, MapNode.Category.REGULAR));
             }
         }
-        worldRenderer = new WorldRenderer(map);
+        worldRenderer = new WorldRenderer(map, DEFAULT_CAMERA_ZOOM, stats);
         cameraMove = new Vector2();
         moveLeftMax = (int) (Gdx.graphics.getWidth() * .2);
         moveRightMin = Gdx.graphics.getWidth() - moveLeftMax;
@@ -116,13 +136,16 @@ public class GameState extends ApplicationAdapter implements InputProcessor
             timeSinceLastUpdate -= TIMEPERFRAME;
             update(TIMEPERFRAME);
         }
-//        update(dt);
         worldRenderer.render();
     }
     
     private void update(float dt)
     {
         worldRenderer.moveCamera(cameraMove);
+        worldRenderer.zoom(cameraZoom);
+        if(cameraZoom != 0)
+            cameraZoom = 0;
+
         map.update(map, dt);
         //This is a stupid hack to add sceneNodes to the map without getting concurent modification blah blah exception
         map.insertFutureAddMap();
@@ -133,14 +156,46 @@ public class GameState extends ApplicationAdapter implements InputProcessor
             if(squareType == MapNode.Category.BLOCK)
             {
                 Mob tmp = new Mob(Mob.Category.BASIC, atlas, (int)windowTileSize.x, (int)windowTileSize.y, tileSize, startNode, endNode, map);
+                time = tmp.getGlobalSpawnDelay();
                 map.layerChildNode(tmp, SceneNode.get1d((int)startNode.getTilePosition().x, (int)startNode.getTilePosition().y, (int)windowTileSize.x));
             }
-            time = 1;
         }
         
-        checkCameraMove();
+        checkMultiTouch();
     }
     
+    private void checkMultiTouch()
+    {
+        checkCameraMove();
+        checkCameraZoom();
+    }
+    
+    private void checkCameraZoom()
+    {
+        //TODO find a better way to only do one of these per update
+        if(cameraMove.x != 0 || cameraMove.y != 0 || !Gdx.input.isTouched(0) || !Gdx.input.isTouched(1))
+        {
+            zoomPreviously = false;
+            return;
+        }
+
+        int x1 = Gdx.input.getX(0);
+        int y1 = Gdx.input.getY(0);
+        int x2 = Gdx.input.getX(1);
+        int y2 = Gdx.input.getY(1);
+        float distance = CollisionDetection.getDistance(x1, y1, x2, y2);
+
+        if(zoomPreviously)
+        {
+            if(previousZoomDistance < distance)
+                cameraZoom = ZOOM_CONSTANT;
+            else
+                cameraZoom = -1 * ZOOM_CONSTANT;
+        }
+        zoomPreviously = true;
+        previousZoomDistance = distance;
+    }
+
     private void checkCameraMove()
     {
         if(!Gdx.input.isTouched(0) || !Gdx.input.isTouched(1))
@@ -150,11 +205,6 @@ public class GameState extends ApplicationAdapter implements InputProcessor
             return;
         }
         
-        moveLeftMax = (int) (Gdx.graphics.getWidth() * .2);
-        moveRightMin = Gdx.graphics.getWidth() - moveLeftMax;
-        moveDownMax = (int) (Gdx.graphics.getHeight() * .2);
-        moveUpMin = Gdx.graphics.getHeight() - moveDownMax;
-
         int x1 = Gdx.input.getX(0);
         int y1 = Gdx.input.getY(0);
         int x2 = Gdx.input.getX(1);
@@ -165,9 +215,9 @@ public class GameState extends ApplicationAdapter implements InputProcessor
         else if(x1 <= moveLeftMax && x2 <= moveLeftMax)
             cameraMove.x += CAMERA_MOVE_CONSTANT;
         else if(y1 >= moveUpMin && y2 >= moveUpMin)
-            cameraMove.y -= CAMERA_MOVE_CONSTANT;
-        else if(y1 <= moveDownMax && y2 <= moveDownMax)
             cameraMove.y += CAMERA_MOVE_CONSTANT;
+        else if(y1 <= moveDownMax && y2 <= moveDownMax)
+            cameraMove.y -= CAMERA_MOVE_CONSTANT;
     }
 
     @Override
@@ -244,15 +294,18 @@ public class GameState extends ApplicationAdapter implements InputProcessor
     public boolean touchDown(int screenX, int screenY, int pointer, int button)
     {
         Vector2 touch = GraphicsUtils.getNormalizedScreenTouch(screenX, screenY, worldRenderer.getCameraPosition());
+        float cameraZoom = worldRenderer.getCameraZoom();
+        Vector2 touchedTile = new Vector2(touch.x/(tileSize/cameraZoom), touch.y/(tileSize/cameraZoom));
 
-        if(touch.x < 0 || touch.x >= Gdx.graphics.getWidth()
-                || touch.y < 0 || touch.y >= Gdx.graphics.getHeight())
+
+        if(touch.x < 0 || touch.x >= windowPixelSize.x/cameraZoom
+                || touch.y < 0 || touch.y >= windowPixelSize.y/cameraZoom)
         {
             removeTmpTower();
             return true;
         }
 
-        int oned = SceneNode.get1d((int)touch.x/tileSize, (int)touch.y/tileSize, (int)windowTileSize.x);
+        int oned = SceneNode.get1d((int)touchedTile.x, (int)touchedTile.y, (int)windowTileSize.x);
         SceneNode tile = map.getChildNode(oned);
         MapNode mapTile = (MapNode) tile;
 
@@ -279,21 +332,20 @@ public class GameState extends ApplicationAdapter implements InputProcessor
             }
             else if(mapTile.getType() != MapNode.Category.START && mapTile.getType() != MapNode.Category.END)
             {
-                if(mapTile.getType() != MapNode.Category.BLOCK)
+                if(tmpTower == null)
                 {
-                    if(tmpTower == null)
-                    {
-                        //Due to int math, /tileSize*tileSize will get us the position divisible by tileSize
-                        tmpTower = new Tower(Tower.Category.BLOCK, (int)touch.x/tileSize*tileSize, (int)touch.y/tileSize*tileSize, 
-                                (int)windowTileSize.x, (int)windowTileSize.y, tileSize, atlas, map);
+                    tmpTower = new Tower(Tower.Category.BLOCK, ((int)touchedTile.x) * tileSize, ((int)touchedTile.y) * tileSize, 
+                            (int)windowTileSize.x, (int)windowTileSize.y, tileSize, atlas, map);
 
-                        tile.layerChildNode(tmpTower);
-                        return true;
-                    }
-                    else
+                    tile.layerChildNode(tmpTower);
+                    return true;
+                }
+                else
+                {
+                    if(mapTile.getType() != MapNode.Category.BLOCK)
                     {
                         Vector2 towerPos = tmpTower.getTilePosition();
-                        if(towerPos.x == (int)touch.x/tileSize && towerPos.y == (int)touch.y/tileSize)
+                        if(towerPos.x == (int)touchedTile.x && towerPos.y == (int)touchedTile.y)
                         {
                             mapTile.setType(squareType);
                             if(validTowerPlacement(tile))
@@ -391,7 +443,10 @@ public class GameState extends ApplicationAdapter implements InputProcessor
     @Override
     public boolean scrolled(int amount)
     {
-        // TODO Auto-generated method stub
-        return false;
+        if(amount < 0)
+            cameraZoom = -1 * ZOOM_CONSTANT;
+        else
+            cameraZoom = ZOOM_CONSTANT;
+        return true;
     }
 }

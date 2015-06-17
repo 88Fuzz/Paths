@@ -5,84 +5,91 @@ filter: Nearest,Nearest
 repeat: none
 BlockTile
   rotate: false
-  xy: 1, 1
-  size: 30, 30
-  orig: 30, 30
+  xy: 1, 311
+  size: 200, 200
+  orig: 200, 200
   offset: 0, 0
   index: -1
 Circle
   rotate: false
-  xy: 33, 1
-  size: 30, 30
-  orig: 30, 30
-  offset: 0, 0
-  index: -1
-ClosedTile
-  rotate: false
-  xy: 65, 1
-  size: 30, 30
-  orig: 30, 30
+  xy: 1, 109
+  size: 200, 200
+  orig: 200, 200
   offset: 0, 0
   index: -1
 EndTile
   rotate: false
-  xy: 97, 1
-  size: 30, 30
-  orig: 30, 30
+  xy: 203, 311
+  size: 200, 200
+  orig: 200, 200
   offset: 0, 0
   index: -1
 GrassTile
   rotate: false
-  xy: 129, 1
+  xy: 203, 109
+  size: 200, 200
+  orig: 200, 200
+  offset: 0, 0
+  index: -1
+GrassTileBorder
+  rotate: false
+  xy: 405, 311
+  size: 200, 200
+  orig: 200, 200
+  offset: 0, 0
+  index: -1
+PathTile
+  rotate: false
+  xy: 405, 109
+  size: 200, 200
+  orig: 200, 200
+  offset: 0, 0
+  index: -1
+StartTile
+  rotate: false
+  xy: 607, 311
+  size: 200, 200
+  orig: 200, 200
+  offset: 0, 0
+  index: -1
+SimpleBullet
+  rotate: false
+  xy: 1, 7
+  size: 100, 100
+  orig: 100, 100
+  offset: 0, 0
+  index: -1
+ClosedTile
+  rotate: false
+  xy: 607, 279
   size: 30, 30
   orig: 30, 30
   offset: 0, 0
   index: -1
 OpenTile
   rotate: false
-  xy: 161, 1
-  size: 30, 30
-  orig: 30, 30
-  offset: 0, 0
-  index: -1
-PathTile
-  rotate: false
-  xy: 193, 1
+  xy: 809, 481
   size: 30, 30
   orig: 30, 30
   offset: 0, 0
   index: -1
 Person
   rotate: false
-  xy: 225, 1
+  xy: 103, 77
   size: 30, 30
   orig: 30, 30
-  offset: 0, 0
-  index: -1
-StartTile
-  rotate: false
-  xy: 257, 1
-  size: 30, 30
-  orig: 30, 30
-  offset: 0, 0
-  index: -1
-SimpleBullet
-  rotate: false
-  xy: 289, 16
-  size: 15, 15
-  orig: 15, 15
   offset: 0, 0
   index: -1
 HealthPixel
   rotate: false
-  xy: 289, 13
+  xy: 1, 4
   size: 1, 1
   orig: 1, 1
   offset: 0, 0
   index: -1
 WhitePixel
   rotate: false
-  xy: 306, 30
+  xy: 1, 1
   size: 1, 1
   orig: 1, 1
   offset: 0, 0

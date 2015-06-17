@@ -21,6 +21,8 @@ public class DesktopLauncher {
 	    LwjglApplicationConfiguration config = new LwjglApplicationConfiguration();
         config.title = "Paths";
         config.useGL30 = false;
+//        config.width = 1920;
+//        config.height = 1080;
         config.width = 1600;
         config.height = 900;
 //        config.width = 90;

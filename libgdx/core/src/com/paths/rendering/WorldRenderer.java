@@ -17,45 +17,50 @@ import com.paths.constants.TextureConstants;
 import com.paths.drawable.FuckMe;
 import com.paths.drawable.MyTexture;
 import com.paths.drawable.SceneNode;
+import com.paths.utils.GameStats;
 import com.paths.utils.GraphicsUtils;
 
 public class WorldRenderer implements Disposable
 {
+    private static final float MIN_CAMERA_ZOOM = 1;
     private OrthographicCamera camera;
     private OrthographicCamera cameraGUI;
     private SpriteBatch batch;
     private BitmapFont font;
     private SceneNode map;
+    private GameStats stats;
 //    private WorldController worldController;
 
-    public WorldRenderer(SceneNode map)
+    public WorldRenderer(SceneNode map, float cameraZoom, GameStats stats)
     {
         font = new BitmapFont(Gdx.files.internal("images/arial-15.fnt"), true);
-        font.setScale(0.75f);
+        font.setScale(1.25f);
         font.getRegion().getTexture().setFilter(TextureFilter.Linear, TextureFilter.Linear);
         font.setColor(1, 1, 1, 1);
-        init(map);
+        init(map, cameraZoom, stats);
     }
 
-    private void init(SceneNode map)
+    private void init(SceneNode map, float cameraZoom, GameStats stats)
     {
         batch = new SpriteBatch();
         camera = new OrthographicCamera(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
         camera.position.set(0 + Gdx.graphics.getWidth()/2, 0 + Gdx.graphics.getHeight()/2, 0);
-//        camera.position.set(0,0,0);
         camera.update();
-//        cameraGUI = new OrthographicCamera(Constants.VIEWPORT_GUI_WIDTH, Constants.VIEWPORT_GUI_HEIGHT);
         cameraGUI = new OrthographicCamera(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-        cameraGUI.position.set(0, 0, 0);
+//        cameraGUI.position.set(0, 0, 0);
+        cameraGUI.position.set(0 + Gdx.graphics.getWidth()/2, 0 + Gdx.graphics.getHeight()/2, 0);
+        cameraGUI.setToOrtho(true);
         cameraGUI.update();
         this.map = map;
+        this.stats = stats;
+        zoom(cameraZoom);
     }
 
     public void render()
     {
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
         renderWorld(batch);
-//        renderGui(batch);
+        renderGui(batch);
     }
 
     private void renderWorld(SpriteBatch batch)
@@ -63,9 +68,8 @@ public class WorldRenderer implements Disposable
 //        worldController.cameraHelper.applyTo(camera);
         batch.setProjectionMatrix(camera.combined);
         batch.begin();
-        map.draw(batch);
+        map.drawTree(batch);
 
-        renderGuiFpsCounter(batch);
 //        worldController.level.render(batch);
         batch.end();
     }
@@ -77,18 +81,41 @@ public class WorldRenderer implements Disposable
 		camera.update();
     }
     
+    public void zoom(float zoom)
+    {
+        float tmpZoom = camera.zoom + zoom;
+        camera.zoom = Math.max(MIN_CAMERA_ZOOM, tmpZoom);
+        camera.update();
+    }
+    
+    public float getCameraZoom()
+    {
+        return camera.zoom;
+    }
+    
     public Vector2 getCameraPosition()
     {
-        Vector2 tmpVector = new Vector2(camera.position.x - Gdx.graphics.getWidth()/2, camera.position.y - Gdx.graphics.getHeight()/2);
+//        Vector2 tmpVector = new Vector2();
+//        System.out.println("width " + Gdx.graphics.getWidth() + " height " + Gdx.graphics.getHeight());
+//        float tmp = camera.position.x / camera.zoom;
+//        tmp = tmp - (Gdx.graphics.getWidth()/2);
+//        tmpVector.x = tmp;
+//        tmp = camera.position.y = camera.zoom;
+//        tmp = tmp - (Gdx.graphics.getHeight()/2);
+//        tmpVector.y = tmp;
+
+        Vector2 tmpVector = new Vector2(camera.position.x/camera.zoom - Gdx.graphics.getWidth()/2, camera.position.y/camera.zoom - Gdx.graphics.getHeight()/2);
         return tmpVector;
     }
 
-    /*
     private void renderGui(SpriteBatch batch)
     {
         batch.setProjectionMatrix(cameraGUI.combined);
         batch.begin();
+        renderGuiFpsCounter(batch);
+        renserGameStats(batch);
 
+        /*
         // draw collected gold coins icon + text (anchored to top left edge)
         renderGuiScore(batch);
         // draw collected feather icon (anchored to top left edge)
@@ -99,11 +126,12 @@ public class WorldRenderer implements Disposable
         renderGuiFpsCounter(batch);
         // draw game over text
         renderGuiGameOverMessage(batch);
+        */
 
         batch.end();
     }
-
-    private void renderGuiScore(SpriteBatch batch)
+    
+    /*private void renderGuiScore(SpriteBatch batch)
     {
         float x = -15;
         float y = -15;
@@ -145,11 +173,25 @@ public class WorldRenderer implements Disposable
 
     private void renderGuiFpsCounter(SpriteBatch batch)
     {
-        float x = camera.viewportWidth - 55;
-        float y = camera.viewportHeight - 15;
+        float x = camera.viewportWidth - 75;
+        float y = camera.viewportHeight - 25;
         int fps = Gdx.graphics.getFramesPerSecond();
 
         font.draw(batch, "FPS: " + fps, x, y);
+    }
+
+    private void renserGameStats(SpriteBatch batch)
+    {
+        //TODO make points and crumbs a picture
+        String points = "Points: ";
+        String crumbs = "Crumbs: ";
+
+        float x = 3;
+        float y = 3;
+        
+        font.draw(batch, points + (int)stats.getPoints(), x, y);
+        x = camera.viewportWidth - 120;
+        font.draw(batch, crumbs + (int)stats.getCrumbs(), x, y);
     }
 
     /*

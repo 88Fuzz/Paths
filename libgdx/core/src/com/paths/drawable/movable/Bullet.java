@@ -6,7 +6,6 @@ import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.math.Vector2;
 import com.paths.constants.TextureConstants;
-import com.paths.drawable.MyTexture;
 import com.paths.drawable.SceneNode;
 import com.paths.utils.CollisionDetection;
 
@@ -14,7 +13,7 @@ public class Bullet extends Moveable
 {
     public enum Category
     {
-        BASIC(180.0f, 60, 20, new Vector2(15, 15), false, TextureConstants.SIMPLE_BULLET_KEY);
+        BASIC(280.0f, 460, 20, new Vector2(15, 15), false, TextureConstants.SIMPLE_BULLET_KEY);
         
         private float speed;
         private String textureKey;

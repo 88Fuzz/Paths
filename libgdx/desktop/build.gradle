@@ -25,6 +25,10 @@ task dist(type: Jar) {
     }
 }
 
+dependencies {
+    compile files('libs/gdx-tools.jar')
+}
+
 dist.dependsOn classes
 
 eclipse {

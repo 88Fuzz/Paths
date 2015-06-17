@@ -8,21 +8,24 @@ import com.badlogic.gdx.math.Vector2;
 import com.paths.constants.TextureConstants;
 import com.paths.drawable.MapNode;
 import com.paths.drawable.SceneNode;
+import com.paths.utils.CollisionDetection;
 
 public class Mob extends Moveable
 {
     public enum Category
     {
-        BASIC(100, 100, 100, 500, new Vector2(30, 30), TextureConstants.CIRCLE_KEY);
+        BASIC(200, 100, 100, 500, 10, new Vector2(30, 30), TextureConstants.CIRCLE_KEY, 1.0f);
         private float speed;
         private int health;
         private int damage;
         private int points;
+        private int crumbs;
         private Vector2 dimension;
         private Vector2 hitbox;
         private String textureKey;
+        private float globalSpawnDelay;
         
-        Category(float speed, int health, int damage, int points, Vector2 dimension, String textureKey)
+        Category(float speed, int health, int damage, int points, int crumbs, Vector2 dimension, String textureKey, float globalSpawnDelay)
         {
             this.speed = speed;
             this.health = health;
@@ -31,6 +34,8 @@ public class Mob extends Moveable
             this.hitbox = dimension;
             this.textureKey = textureKey;
             this.points = points;
+            this.globalSpawnDelay = globalSpawnDelay;
+            this.crumbs = crumbs;
         }
         
         public int getPoints()
@@ -67,6 +72,16 @@ public class Mob extends Moveable
         {
             return textureKey;
         }
+
+        public float getGlobalSpawnDelay()
+        {
+            return globalSpawnDelay;
+        }
+        
+        public int getCrumbs()
+        {
+            return crumbs;
+        }
     }
 
     private MapNode startNode;
@@ -78,9 +93,11 @@ public class Mob extends Moveable
     private MapNode currentNode;
     private int points;
     private int health;
+    private int crumbs;
     private int maxHealth;
     private boolean dead;
     private Sprite healthBar;
+    private float globalSpawnDelay;
 
     public Mob(Mob.Category category, TextureAtlas atlas, int mapWidth, int mapHeight, int tileSize, MapNode start, MapNode end, SceneNode map)
     {
@@ -91,26 +108,25 @@ public class Mob extends Moveable
     public void init(Mob.Category category, TextureAtlas atlas, MapNode start, MapNode end, SceneNode map, int mapWidth, int mapHeight, int tileSize)
     {
         super.init(SceneNode.Category.MOB, mapTileWidth, mapTileHeight, tileSize, map);
+        setCategoryProperties(category);
+
         //TODO change this to have a configurable everything for when there are multiple types of mobs. YO
         this.startNode = start;
         this.endNode = end;
         this.map = map;
-        this.maxVelocity = category.getSpeed();
         this.parentNode = start;
         this.currentNode = start;
         this.distanceToTravel = 0;
 
         tilePos = startNode.getTilePosition();
-        pos = startNode.getCenteredPosition();
-        this.pos = start.getCenteredPosition();
-        this.pos.x -= category.getDimension().x/2;
-        this.pos.y -= category.getDimension().y/2;
+        pos = startNode.getPosition();
+//        this.pos = start.getCenteredPosition();
+//        this.pos.x -= category.getDimension().x/2;
+//        this.pos.y -= category.getDimension().y/2;
 
         //TODO Create an enum with these properties
         //TODO and this score
         //TODO and the above dimensions
-        points = category.getPoints();
-        health = maxHealth = category.getHealth();
         dead = false;
 
         sprite = new Sprite(atlas.findRegion(category.getTextureKey()));
@@ -121,6 +137,15 @@ public class Mob extends Moveable
         updateHealthBar();
 
         calculateVelocity();
+    }
+    
+    private void setCategoryProperties(Mob.Category category)
+    {
+        this.maxVelocity = category.getSpeed();
+        points = category.getPoints();
+        health = maxHealth = category.getHealth();
+        globalSpawnDelay = category.getGlobalSpawnDelay();
+        crumbs = category.getCrumbs();
     }
 
     //TODO figure out how to implement this method
@@ -162,11 +187,7 @@ public class Mob extends Moveable
 //        Vector2 futurePos = nextNode.getCenteredPosition();
         Vector2 futurePos = nextNode.getPosition();
 
-        float xDist = futurePos.x - pos.x;
-        float yDist = futurePos.y - pos.y;
-        float retVal = xDist * xDist + yDist * yDist;
-
-        distanceToTravel = (float) Math.sqrt(retVal);
+        distanceToTravel = CollisionDetection.getDistance(futurePos, pos);
     }
     @Override
     public void drawCurrent(SpriteBatch batch)
@@ -174,16 +195,6 @@ public class Mob extends Moveable
         super.drawCurrent(batch);
         
         healthBar.draw(batch);
-        
-//        Vector2 texturePos = healthBar.getPos();
-//        Vector2 origin = healthBar.getOrigin();
-//        Vector2 dimension = healthBar.getDimension();
-//        Vector2 scale = healthBar.getScale();
-//
-//        batch.draw(healthBar.getTexture(), texturePos.x, texturePos.y,
-//                origin.x, origin.y, dimension.x, dimension.y,
-//                scale.x, scale.y, healthBar.getRotation(), healthBar.getRegionX(), healthBar.getRegionY(),
-//                healthBar.getRegionWidth(), healthBar.getRegionHeight(), false, false);
     }
 
     @Override
@@ -192,21 +203,7 @@ public class Mob extends Moveable
         super.updateCurrent(superNode, dt);
         updateHealthBar();
         
-        //TODO remove this stuff
-//        pos.x=0;
-//        pos.y=0;
-//        sprite.setPos(pos);
-//        tilePos.x = (int) pos.x / tileSize;
-//        tilePos.y = (int) pos.y / tileSize;
-
-//        if(tilePos.x - dimension.x/2 < pos.x + bulletDimension.x/2 &&
-//                tilePos.x + dimension.x/2 > pos.x - bulletDimension.x/2)
-//
-//       if(tilePos.y - dimension.y/2 < pos.y + bulletDimension.y/2 &&
-//       tilePos.y + dimension.y/2 > pos.y - bulletDimension.y/2)
-
         float distance = velocity.x*dt * velocity.x*dt + velocity.y*dt * velocity.y*dt;
-
         distanceToTravel -= Math.sqrt(distance);
 
         if(distanceToTravel <= 0)
@@ -245,8 +242,25 @@ public class Mob extends Moveable
     }
     
     @Override
+    public int getPoints()
+    {
+        return points;
+    }
+    
+    @Override
+    public int getCrumbs()
+    {
+        return crumbs;
+    }
+    
+    @Override
     public boolean isDead()
     {
         return dead;
+    }
+
+    public float getGlobalSpawnDelay()
+    {
+        return globalSpawnDelay;
     }
 }

@@ -22,4 +22,18 @@ public class CollisionDetection
         }
         return false;
     }
+    
+    public static float getDistance(Vector2 pos1, Vector2 pos2)
+    {
+        return getDistance(pos1.x, pos1.y, pos2.x, pos2.y);
+    }
+    
+    public static float getDistance(float x1, float y1, float x2, float y2)
+    {
+        float xDist = x1 - x2;
+        float yDist = y1 - y2;
+        float retVal = xDist * xDist + yDist * yDist;
+
+        return (float) Math.sqrt(retVal);
+    }
 }

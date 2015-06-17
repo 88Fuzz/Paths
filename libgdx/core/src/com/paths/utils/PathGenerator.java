@@ -109,7 +109,7 @@ public class PathGenerator
                         continue;
                     }
 
-                    float distance = calculateDistance(pos, adjacentNode.getPosition());
+                    float distance = CollisionDetection.getDistance(pos, adjacentNode.getPosition());
                     if(nodeType != MapNode.Category.OPEN || adjacentNode.getDistanceFromStart() > distance + currentNode.getDistanceFromStart())
                     {
                         adjacentNode.setDistanceFromStart(distance + currentNode.getDistanceFromStart());
@@ -138,7 +138,7 @@ public class PathGenerator
         {
             node = (MapNode) it.next();
             node.setDistanceFromStart(0);
-            node.setDistanceToEnd(calculateDistance(node.getPosition(), endPosition));
+            node.setDistanceToEnd(CollisionDetection.getDistance(node.getPosition(), endPosition));
 
             //Reset path since new one is being calculated
             if((node.getType().getValue() & MapNode.Category.BLOCKING.getValue()) == 0)
@@ -149,13 +149,13 @@ public class PathGenerator
         endNode.setType(MapNode.Category.END);
     }
     
-    private static float calculateDistance(Vector2 pos1, Vector2 pos2)
-    {
-        float yDist = pos2.y - pos1.y;
-        float xDist = pos2.x - pos1.x;
-        float retVal = xDist * xDist + yDist * yDist;
-        return (float) Math.sqrt(retVal);
-    }
+    //private static float calculateDistance(Vector2 pos1, Vector2 pos2)
+    //{
+    //    float yDist = pos2.y - pos1.y;
+    //    float xDist = pos2.x - pos1.x;
+    //    float retVal = xDist * xDist + yDist * yDist;
+    //    return (float) Math.sqrt(retVal);
+    //}
     
     private static void colorPath(MapNode startNode, MapNode endNode)
     {

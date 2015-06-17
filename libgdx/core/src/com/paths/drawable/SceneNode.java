@@ -9,7 +9,9 @@ import java.util.Map;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Vector2;
+import com.paths.GameStates.GameState;
 import com.paths.drawable.movable.Moveable;
+import com.paths.utils.GameStats;
 
 /*
  * Lowest level drawable object
@@ -133,23 +135,20 @@ public class SceneNode
     {
         parents.add(node);
     }
+    
+    public void drawTree(SpriteBatch batch)
+    {
+        draw(batch);
+
+        while(!drawingQ.isEmpty())
+            drawingQ.poll().draw(batch);
+    }
 
     public void draw(SpriteBatch batch)
     {
-        // Top of Queue will be current, pop it off
-        // Check if empty for root node, which wont be pushed into queue
-        if(!drawingQ.isEmpty())
-            drawingQ.poll();
-
         drawCurrent(batch);
-
         for(SceneNode child : children)
-        {
             drawingQ.add(child);
-        }
-
-        if(!drawingQ.isEmpty())
-            drawingQ.peek().draw(batch);
     }
 
     protected void drawCurrent(SpriteBatch batch)
@@ -205,12 +204,22 @@ public class SceneNode
                 superNode.layerChildNode(node, SceneNode.get1d((int)tmpVector.x, (int)tmpVector.y, mapTileWidth));
             }
             else if(node.isDead())
+            {
+                GameState.stats.addPoints(node.getPoints() * GameState.stats.getPointsMultiplier());
+                GameState.stats.addCrumbs(node.getCrumbs() * GameState.stats.getCrumbMultiplier());
                 it.remove();
+            }
         }
-//        for(SceneNode child : children)
-//        {
-//            child.update(dt);
-//        }
+    }
+    
+    public int getPoints()
+    {
+        return 0;
+    }
+    
+    public int getCrumbs()
+    {
+        return 0;
     }
 
     public SceneNode getChildNode(int pos)
