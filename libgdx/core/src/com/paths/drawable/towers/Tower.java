@@ -18,16 +18,17 @@ public class Tower extends SceneNode
 {
     public enum Category
     {
-        BLOCK(2, 1, 3, 5, TextureConstants.BLOCK_TILE_KEY, Bullet.Category.BASIC);
+        BLOCK(2, 1, 3, 5, 20, TextureConstants.BLOCK_TILE_KEY, Bullet.Category.BASIC);
         
         private int shootRadius;
         private int maxBullets;
+        private int crumbCost;
         private float shootDelay;
         private float buildSpeed;
         private String textureKey;
         private Bullet.Category bulletType;
 
-        Category(int shootRadius, float shootDelay, int maxBullets, float buildSpeed, String textureKey, Bullet.Category bulletType)
+        Category(int shootRadius, float shootDelay, int maxBullets, float buildSpeed, int crumbCost, String textureKey, Bullet.Category bulletType)
         {
             this.shootRadius = shootRadius;
             this.shootDelay = shootDelay;
@@ -35,6 +36,12 @@ public class Tower extends SceneNode
             this.bulletType = bulletType;
             this.maxBullets = maxBullets;
             this.buildSpeed = buildSpeed;
+            this.crumbCost = crumbCost;
+        }
+        
+        public int getCrumbCost()
+        {
+            return crumbCost;
         }
 
         public int getShootRadius()
@@ -87,6 +94,7 @@ public class Tower extends SceneNode
     private LinkedList<Bullet> activeBullets;
     private Sprite buildBar;
     private State state;
+    private int crumbCost;
     
     /*
      * Init needs to be called after this
@@ -123,6 +131,7 @@ public class Tower extends SceneNode
         shootDelay = maxShootDelay = category.getShootDelay();
         bulletType = category.getBulletType();
         buildSpeed = category.getBuildSpeed();
+        crumbCost = category.getCrumbCost();
         for(int count = 0; count < category.getMaxBullets(); count++)
         {
             freeBullets.add(new Bullet());
@@ -257,5 +266,10 @@ public class Tower extends SceneNode
 //                origin.x, origin.y, dimension.x, dimension.y,
 //                scale.x, scale.y, sprite.getRotation(), sprite.getRegionX(), sprite.getRegionY(),
 //                sprite.getRegionWidth(), sprite.getRegionHeight(), false, false);
+    }
+    
+    public int getCrumbCost()
+    {
+        return crumbCost;
     }
 }

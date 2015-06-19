@@ -35,7 +35,6 @@ public class GameStats
 
     public void addPoints(float points)
     {
-        System.out.println("Setting points to " + points);
         this.points += points;
     }
 

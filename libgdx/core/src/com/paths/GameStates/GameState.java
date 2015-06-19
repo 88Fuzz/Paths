@@ -25,7 +25,7 @@ public class GameState extends ApplicationAdapter implements InputProcessor
     private static final float ZOOM_CONSTANT = 1;
     private static final float DEFAULT_CAMERA_ZOOM = 4;
     
-    public static final GameStats stats = new GameStats(0,0,1.0f,1.0f);
+    public static final GameStats stats = new GameStats(100,0,1.0f,1.0f);
 
     private WorldRenderer worldRenderer;
     private SceneNode map;
@@ -49,22 +49,6 @@ public class GameState extends ApplicationAdapter implements InputProcessor
     private boolean zoomPreviously;
     private float previousZoomDistance;
     
-    
-    // @Override
-    // public void create() {
-    // batch = new SpriteBatch();
-    // img = new Texture("badlogic.jpg");
-    // }
-    //
-    // @Override
-    // public void render() {
-    // Gdx.gl.glClearColor(1, 0, 0, 1);
-    // Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
-    // batch.begin();
-    // batch.draw(img, 0, 0);
-    // batch.end();
-    // }
-
     @Override
     public void create()
     {
@@ -77,12 +61,6 @@ public class GameState extends ApplicationAdapter implements InputProcessor
         windowPixelSize = new Vector2(windowTileSize);
         windowPixelSize.scl(200);
 
-//        windowTileSize.x = Gdx.graphics.getWidth() / tileSize;
-//        windowTileSize.y = Gdx.graphics.getHeight() / tileSize;
-//        windowTileSize.x = 90 / tileSize;
-//        windowTileSize.y = 90 / tileSize;
-//        windowTileSize.x = 10;
-//        windowTileSize.y = 10;
         map = new MapNode(null, 0, 0, 0, 0, (int)windowTileSize.x, (int)windowTileSize.y, tileSize, MapNode.Category.NONE);
         squareType = MapNode.Category.START;
         startNode = null;
@@ -348,8 +326,9 @@ public class GameState extends ApplicationAdapter implements InputProcessor
                         if(towerPos.x == (int)touchedTile.x && towerPos.y == (int)touchedTile.y)
                         {
                             mapTile.setType(squareType);
-                            if(validTowerPlacement(tile))
+                            if(validTowerPlacement(tile) && checkCrumbs(tmpTower))
                             {
+                                stats.addCrumbs(-1 * tmpTower.getCrumbCost());
                                 PathGenerator.findPath((MapNode) map, startNode, endNode, windowTileSize);
                                 tmpTower.touched();
                                 tmpTower = null;
@@ -362,6 +341,14 @@ public class GameState extends ApplicationAdapter implements InputProcessor
             }
         }
         removeTmpTower();
+        return true;
+    }
+
+    private boolean checkCrumbs(Tower tower)
+    {
+        if(stats.getCrumbs() - tower.getCrumbCost() < 0)
+            return false;
+
         return true;
     }
     
