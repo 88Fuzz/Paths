@@ -10,7 +10,8 @@ import com.badlogic.gdx.math.Vector2;
 import com.paths.constants.TextureConstants;
 import com.paths.drawable.MapNode;
 import com.paths.drawable.SceneNode;
-import com.paths.drawable.movable.Mob;
+import com.paths.drawable.movable.mob.Mob;
+import com.paths.drawable.movable.mob.Splitter;
 import com.paths.drawable.towers.Tower;
 import com.paths.rendering.WorldRenderer;
 import com.paths.utils.CollisionDetection;
@@ -25,7 +26,7 @@ public class GameState extends ApplicationAdapter implements InputProcessor
     private static final float ZOOM_CONSTANT = 1;
     private static final float DEFAULT_CAMERA_ZOOM = 4;
     
-    public static final GameStats stats = new GameStats(100,0,1.0f,1.0f);
+    public static final GameStats stats = new GameStats(100,0,1.0f,1.0f, 1000.0f);
 
     private WorldRenderer worldRenderer;
     private SceneNode map;
@@ -133,7 +134,7 @@ public class GameState extends ApplicationAdapter implements InputProcessor
         {
             if(squareType == MapNode.Category.BLOCK)
             {
-                Mob tmp = new Mob(Mob.Category.BASIC, atlas, (int)windowTileSize.x, (int)windowTileSize.y, tileSize, startNode, endNode, map);
+                Mob tmp = new Splitter(Mob.Category.SPLITTER, atlas, (int)windowTileSize.x, (int)windowTileSize.y, tileSize, startNode, endNode, map);
                 time = tmp.getGlobalSpawnDelay();
                 map.layerChildNode(tmp, SceneNode.get1d((int)startNode.getTilePosition().x, (int)startNode.getTilePosition().y, (int)windowTileSize.x));
             }
@@ -326,7 +327,7 @@ public class GameState extends ApplicationAdapter implements InputProcessor
                         if(towerPos.x == (int)touchedTile.x && towerPos.y == (int)touchedTile.y)
                         {
                             mapTile.setType(squareType);
-                            if(validTowerPlacement(tile) && checkCrumbs(tmpTower))
+                            if(checkCrumbs(tmpTower) && validTowerPlacement(tile))
                             {
                                 stats.addCrumbs(-1 * tmpTower.getCrumbCost());
                                 PathGenerator.findPath((MapNode) map, startNode, endNode, windowTileSize);

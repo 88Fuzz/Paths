@@ -7,6 +7,7 @@ import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.math.Vector2;
 import com.paths.constants.TextureConstants;
 import com.paths.drawable.SceneNode;
+import com.paths.drawable.movable.mob.Mob;
 import com.paths.utils.CollisionDetection;
 
 public class Bullet extends Moveable
@@ -82,6 +83,7 @@ public class Bullet extends Moveable
     public void init(Category category, int mapTileWidth, int mapTileHeight, int tileSize, TextureAtlas atlas, SceneNode start, SceneNode target, SceneNode map)
     {
         super.init(SceneNode.Category.NONE, mapTileWidth, mapTileHeight, tileSize, map);
+        
         dead = false;
         points = 0;
         this.atlas = atlas;

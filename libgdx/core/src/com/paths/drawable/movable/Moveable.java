@@ -3,6 +3,7 @@ package com.paths.drawable.movable;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Vector2;
 import com.paths.drawable.SceneNode;
+import com.paths.drawable.movable.mob.Mob;
 
 public class Moveable extends SceneNode
 {
@@ -38,36 +39,6 @@ public class Moveable extends SceneNode
         super.dispose();
     }
 
-    public void setMapTileWidth(int width)
-    {
-        mapTileWidth = width;
-    }
-
-    public int getMapTileWidth()
-    {
-        return mapTileWidth;
-    }
-
-    public void setMapTileHeight(int height)
-    {
-        mapTileHeight = height;
-    }
-
-    public int getMapTileHeight()
-    {
-        return mapTileHeight;
-    }
-
-    public void setTileSize(int size)
-    {
-        tileSize = size;
-    }
-
-    public int getTileSize()
-    {
-        return tileSize;
-    }
-    
     @Override
     protected void updateCurrent(SceneNode superNode, float dt)
     {
@@ -86,7 +57,7 @@ public class Moveable extends SceneNode
         if(!tmpVector.equals(tilePos))
         {
             //have to mark this for removal later cause of bullshit concurrent modification exceptions
-            swap = true;
+            setSwap(true);
         }
         sprite.setPosition(pos.x, pos.y);
     }
@@ -98,6 +69,11 @@ public class Moveable extends SceneNode
         tmp.y = tilePos.y;
         
         return tmp;
+    }
+
+    public void setSwap(boolean newSwap)
+    {
+        swap = newSwap;
     }
 
     public boolean needToSwap()

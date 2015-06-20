@@ -12,7 +12,7 @@ import com.badlogic.gdx.math.Vector2;
 import com.paths.constants.TextureConstants;
 import com.paths.drawable.SceneNode;
 import com.paths.drawable.movable.Bullet;
-import com.paths.drawable.movable.Mob;
+import com.paths.drawable.movable.mob.Mob;
 
 public class Tower extends SceneNode
 {
@@ -207,9 +207,6 @@ public class Tower extends SceneNode
 
         if(freeBullets.size() == 0 || shootDelay > 0)
             return;
-        
-//        SceneNode deleteme = map.getChildNode(SceneNode.get1d((int)tilePos.x, (int)tilePos.y+1, mapTileWidth));
-//        shootBullet(deleteme);
         
         //TODO towers should attack mobs that are closest to the exit
         for(int i = (int) (tilePos.x -shootRadius); i <= tilePos.x + shootRadius; i++)

@@ -149,14 +149,6 @@ public class PathGenerator
         endNode.setType(MapNode.Category.END);
     }
     
-    //private static float calculateDistance(Vector2 pos1, Vector2 pos2)
-    //{
-    //    float yDist = pos2.y - pos1.y;
-    //    float xDist = pos2.x - pos1.x;
-    //    float retVal = xDist * xDist + yDist * yDist;
-    //    return (float) Math.sqrt(retVal);
-    //}
-    
     private static void colorPath(MapNode startNode, MapNode endNode)
     {
         MapNode path = endNode.getParentPathNode();

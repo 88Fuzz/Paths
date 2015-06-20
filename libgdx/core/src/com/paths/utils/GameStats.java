@@ -2,20 +2,32 @@ package com.paths.utils;
 
 public class GameStats
 {
+    private float health;
     private float crumbs;
     private float points;
     private float crumbMultiplier;
     private float pointMultiplier;
     
-    public GameStats(float crumbs, float points, float crumbMultiplier, float pointMultiplier) {
-        init(crumbs, points, crumbMultiplier, pointMultiplier);
+    public GameStats(float crumbs, float points, float crumbMultiplier, float pointMultiplier, float health) {
+        init(crumbs, points, crumbMultiplier, pointMultiplier, health);
     }
     
-    public void init(float crumbs, float points, float crumbMultiplier, float pointMultiplier) {
+    public void init(float crumbs, float points, float crumbMultiplier, float pointMultiplier, float health) {
+        this.health = health;
         this.crumbs = crumbs;
         this.points = points;
         this.setCrumbMultiplier(crumbMultiplier);
         this.setPointMultiplier(pointMultiplier);
+    }
+    
+    public float getHealth()
+    {
+        return health;
+    }
+    
+    public void addHealth(float health)
+    {
+        this.health += health;
     }
 
     public float getCrumbs()

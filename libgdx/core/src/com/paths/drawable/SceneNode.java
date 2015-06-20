@@ -11,7 +11,6 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Vector2;
 import com.paths.GameStates.GameState;
 import com.paths.drawable.movable.Moveable;
-import com.paths.utils.GameStats;
 
 /*
  * Lowest level drawable object
@@ -32,7 +31,7 @@ public class SceneNode
 
     private Category type;
     protected ArrayList<SceneNode> children;
-    protected ArrayList<SceneNode> parents;
+    protected SceneNode parentNode;
     protected int mapTileWidth;
     protected int mapTileHeight;
     protected int tileSize;
@@ -55,7 +54,7 @@ public class SceneNode
     {
         type = category;
         children = new ArrayList<SceneNode>();
-        parents = new ArrayList<SceneNode>();
+        parentNode = null;
         this.tileSize = tileSize;
         this.mapTileWidth = mapTileWidth;
         this.mapTileHeight = mapTileHeight;
@@ -106,23 +105,15 @@ public class SceneNode
 
         if(result != null)
         {
-            result.detachParent(this);
+            result.detachParent();
         }
 
         return result;
     }
 
-    public void detachParent(SceneNode node)
+    public void detachParent()
     {
-        for(Iterator<SceneNode> iterator = parents.iterator(); iterator
-                .hasNext();)
-        {
-            if(node == iterator.next())
-            {
-                iterator.remove();
-                break;
-            }
-        }
+        parentNode = null;
     }
 
     public void attachChild(SceneNode node)
@@ -133,7 +124,7 @@ public class SceneNode
 
     public void attachParent(SceneNode node)
     {
-        parents.add(node);
+        parentNode = node;
     }
     
     public void drawTree(SpriteBatch batch)
@@ -205,8 +196,12 @@ public class SceneNode
             }
             else if(node.isDead())
             {
-                GameState.stats.addPoints(node.getPoints() * GameState.stats.getPointsMultiplier());
-                GameState.stats.addCrumbs(node.getCrumbs() * GameState.stats.getCrumbMultiplier());
+                node.onDeath();
+                it.remove();
+            }
+            else if(node.isEndReached())
+            {
+                node.onEndReach();
                 it.remove();
             }
         }
@@ -270,12 +265,13 @@ public class SceneNode
     {
         return children.iterator();
     }
-
-    public Iterator<SceneNode> getParentsIterator()
+    
+    
+    public SceneNode getParentNode()
     {
-        return parents.iterator();
+        return parentNode;
     }
-
+    
     public Category getCategory()
     {
         return type;
@@ -360,6 +356,27 @@ public class SceneNode
     public int kill()
     {
         return 0;
+    }
+    
+    public void onDeath()
+    {
+        GameState.stats.addPoints(getPoints() * GameState.stats.getPointsMultiplier());
+        GameState.stats.addCrumbs(getCrumbs() * GameState.stats.getCrumbMultiplier());
+    }
+    
+    public float getDamage()
+    {
+        return 0;
+    }
+    
+    public boolean isEndReached()
+    {
+        return false;
+    }
+    
+    public void onEndReach()
+    {
+        GameState.stats.addHealth(getDamage());
     }
     
     public boolean isDead()
