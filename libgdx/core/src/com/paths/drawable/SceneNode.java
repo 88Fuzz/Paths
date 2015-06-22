@@ -32,8 +32,7 @@ public class SceneNode
     private Category type;
     protected ArrayList<SceneNode> children;
     protected SceneNode parentNode;
-    protected int mapTileWidth;
-    protected int mapTileHeight;
+    private Vector2 windowTileSize;
     protected int tileSize;
     protected Vector2 pos;
     protected Sprite sprite;
@@ -45,19 +44,18 @@ public class SceneNode
      */
     public SceneNode() { }
 
-    public SceneNode(Category category, int mapWidth, int mapHeight, int tileSize, Vector2 pos, Sprite sprite)
+    public SceneNode(Category category, Vector2 windowTileSize, int tileSize, Vector2 pos, Sprite sprite)
     {
-        init(category, mapWidth, mapHeight, tileSize, pos, sprite);
+        init(category, windowTileSize, tileSize, pos, sprite);
     }
 
-    public void init(Category category, int mapTileWidth, int mapTileHeight, int tileSize, Vector2 pos, Sprite sprite)
+    public void init(Category category, Vector2 windowTileSize, int tileSize, Vector2 pos, Sprite sprite)
     {
         type = category;
         children = new ArrayList<SceneNode>();
         parentNode = null;
         this.tileSize = tileSize;
-        this.mapTileWidth = mapTileWidth;
-        this.mapTileHeight = mapTileHeight;
+        this.windowTileSize = windowTileSize;
         this.pos = pos;
         this.tilePos = new Vector2();
         tilePos.x = pos.x / tileSize;
@@ -192,7 +190,7 @@ public class SceneNode
                 it.remove();
                 
                 Vector2 tmpVector = ((Moveable) node).getTilePos();
-                superNode.layerChildNode(node, SceneNode.get1d((int)tmpVector.x, (int)tmpVector.y, mapTileWidth));
+                superNode.layerChildNode(node, SceneNode.get1d((int)tmpVector.x, (int)tmpVector.y, getWindowTileSizeWidth()));
             }
             else if(node.isDead())
             {
@@ -343,14 +341,19 @@ public class SceneNode
         return tileSize;
     }
     
-    public int getMapTileWidth()
+    public int getWindowTileSizeWidth()
     {
-        return mapTileWidth;
+        return (int)windowTileSize.x;
     }
     
-    public int getMapTileHeight()
+    public int getWindowTileSizeHeight()
     {
-        return mapTileHeight;
+        return (int)windowTileSize.y;
+    }
+    
+    public Vector2 getWindowTileSize()
+    {
+        return windowTileSize;
     }
     
     public int kill()

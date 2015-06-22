@@ -22,20 +22,24 @@ public class PathGenerator
     private static final Comparator<MapNode> comparator = new MapNodeComparator();
     private static final PriorityQueue<MapNode> openList = new PriorityQueue<MapNode>(30, comparator);
 
-    public static boolean findPath(MapNode map, MapNode startNode, MapNode endNode, Vector2 windowTileSize)
+    public static boolean findPathToPath(MapNode map, MapNode startNode, MapNode endNode, Vector2 windowTileSize)
+    {
+        return true;
+    }
+    
+    public static boolean findPath(MapNode map, MapNode startNode, MapNode endNode, Vector2 windowTileSize, 
+            boolean invalidatePaths, boolean toPath)
     {
         MapNode currentNode;
         MapNode adjacentNode;
+        MapNode prevNode = null;
+        MapNode tmpEndNode = endNode;
         Vector2 pos;
         Vector2 tilePos;
         int i, j;
         boolean finished = false;
         boolean pathFound = true;
         MapNode.Category nodeType;
-
-        //TODO do this step on level load????
-        calulateGHValues(map, endNode.getPosition(), startNode, endNode);
-
 
         openList.add(startNode);
         while(!finished)
@@ -54,6 +58,13 @@ public class PathGenerator
             //We have found the end, We should end earlier than this though, if an adjacent square is the end
             if(currentNode == endNode)
                 break;
+
+            if(toPath && currentNode.isValidPath())
+            {
+                tmpEndNode = prevNode;
+                prevNode.setChildPathNode(currentNode);
+                break;
+            }
 
             //ADD it to the closed list, don't add start node so that the color doesn't change
             if(currentNode != startNode)
@@ -114,6 +125,7 @@ public class PathGenerator
                     {
                         adjacentNode.setDistanceFromStart(distance + currentNode.getDistanceFromStart());
                         adjacentNode.setParentPathNode(currentNode);
+                        prevNode = adjacentNode;
                         if(nodeType != MapNode.Category.OPEN)
                         {
                             adjacentNode.setType(MapNode.Category.OPEN);
@@ -125,8 +137,8 @@ public class PathGenerator
         }
 
         openList.clear();
-        resetOpenClosed(map);
-        colorPath(startNode, endNode);
+        resetOpenClosed(map, invalidatePaths);
+        colorPath(startNode, tmpEndNode, toPath);
         return pathFound;
     }
     
@@ -149,22 +161,28 @@ public class PathGenerator
         endNode.setType(MapNode.Category.END);
     }
     
-    private static void colorPath(MapNode startNode, MapNode endNode)
+    private static void colorPath(MapNode startNode, MapNode endNode, boolean toPath)
     {
         MapNode path = endNode.getParentPathNode();
         MapNode prev = endNode;
         while(path != startNode)
         {
+            path.validPath();
             path.setType(MapNode.Category.PATH);
             path.setChildPathNode(prev);
             prev = path;
             path = path.getParentPathNode();
         }
-        startNode.setType(MapNode.Category.START);
+        if(toPath)
+            startNode.setType(MapNode.Category.PATH);
+        else
+            startNode.setType(MapNode.Category.START);
+
         startNode.setChildPathNode(prev);
+        startNode.validPath();
     }
     
-    private static void resetOpenClosed(MapNode map)
+    private static void resetOpenClosed(MapNode map, boolean invalidatePaths)
     {
         MapNode node;
         Iterator<SceneNode> it = map.getChildenIterator();
@@ -172,10 +190,15 @@ public class PathGenerator
         {
             node = (MapNode) it.next();
             MapNode.Category type = node.getType();
-            if(type == MapNode.Category.OPEN || type == MapNode.Category.CLOSED)
-            {
+            if(node.isValidPath())
+                node.setType(MapNode.Category.PATH);
+            else if(type == MapNode.Category.OPEN || type == MapNode.Category.CLOSED)
                 node.setType(MapNode.Category.REGULAR);
-            }
+            
+            //This may need to go in the if above
+            if(invalidatePaths)
+                //TODO add check to not invalidate start and exit?
+                node.invalidatePath();
         }
     }
 }

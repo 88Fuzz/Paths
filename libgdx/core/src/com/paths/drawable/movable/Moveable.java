@@ -18,15 +18,15 @@ public class Moveable extends SceneNode
      */
     public Moveable() { }
 
-    public Moveable(Category category, int mapTileWidth, int mapTileHeight, int tileSize, SceneNode map)
+    public Moveable(Category category, Vector2 windowTileSize, int tileSize, SceneNode map)
     {
         super();
-        init(category, mapTileWidth, mapTileHeight, tileSize, map);
+        init(category, windowTileSize, tileSize, map);
     }
 
-    public void init(Category category, int mapTileWidth, int mapTileHeight, int tileSize, SceneNode map)
+    public void init(Category category, Vector2 windowTileSize, int tileSize, SceneNode map)
     {
-        super.init(category, mapTileWidth, mapTileHeight, tileSize, new Vector2(), null);
+        super.init(category, windowTileSize, tileSize, new Vector2(), null);
         this.map = map;
         this.tileSize = tileSize;
         this.velocity = new Vector2(0,0);
@@ -56,6 +56,11 @@ public class Moveable extends SceneNode
         
         if(!tmpVector.equals(tilePos))
         {
+            if(this instanceof Mob)
+            {
+                pos.x = tileSize * Math.round(pos.x/tileSize);
+                pos.y = tileSize * Math.round(pos.y/tileSize);
+            }
             //have to mark this for removal later cause of bullshit concurrent modification exceptions
             setSwap(true);
         }

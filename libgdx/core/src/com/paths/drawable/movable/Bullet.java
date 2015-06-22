@@ -74,15 +74,15 @@ public class Bullet extends Moveable
     
     public Bullet() { }
 
-    public Bullet(Category category, int mapTileWidth, int mapTileHeight, int tileSize, TextureAtlas atlas, SceneNode start, SceneNode target, SceneNode map)
+    public Bullet(Category category, Vector2 windowTileSize, int tileSize, TextureAtlas atlas, SceneNode start, SceneNode target, SceneNode map)
     {
         super();
-        init(category, mapTileWidth, mapTileHeight, tileSize, atlas, start, target, map);
+        init(category, windowTileSize, tileSize, atlas, start, target, map);
     }
     
-    public void init(Category category, int mapTileWidth, int mapTileHeight, int tileSize, TextureAtlas atlas, SceneNode start, SceneNode target, SceneNode map)
+    public void init(Category category, Vector2 windowTileSize, int tileSize, TextureAtlas atlas, SceneNode start, SceneNode target, SceneNode map)
     {
-        super.init(SceneNode.Category.NONE, mapTileWidth, mapTileHeight, tileSize, map);
+        super.init(SceneNode.Category.NONE, windowTileSize, tileSize, map);
         
         dead = false;
         points = 0;
@@ -130,8 +130,9 @@ public class Bullet extends Moveable
             return;
 
         super.updateCurrent(superNode, dt);
+        Vector2 mapTileSize = getWindowTileSize();
         //Check for collisions
-        SceneNode tileNode = map.getChildNode(SceneNode.get1d((int)tilePos.x, (int)tilePos.y, mapTileWidth));
+        SceneNode tileNode = map.getChildNode(SceneNode.get1d((int)tilePos.x, (int)tilePos.y, (int)mapTileSize.x));
         if(checkCollisions(tileNode))
             return;
 
@@ -143,10 +144,10 @@ public class Bullet extends Moveable
         {
             if(vel.x < 0 && tilePos.x > 0)
                 tileAdjusts.x = -1;
-            else if(tilePos.x < mapTileWidth - 1)
+            else if(tilePos.x < mapTileSize.x- 1)
                 tileAdjusts.x = 1;
 
-            tileNode = map.getChildNode(SceneNode.get1d((int)(tilePos.x + tileAdjusts.x), (int)tilePos.y, mapTileWidth));
+            tileNode = map.getChildNode(SceneNode.get1d((int)(tilePos.x + tileAdjusts.x), (int)tilePos.y, (int)mapTileSize.x));
             if(checkCollisions(tileNode))
                 return;
         }
@@ -154,16 +155,16 @@ public class Bullet extends Moveable
         {
             if(vel.y < 0 && tilePos.y > 0)
                 tileAdjusts.y = -1;
-            else if(tilePos.y < mapTileHeight - 1)
+            else if(tilePos.y < mapTileSize.y - 1)
                 tileAdjusts.y = 1;
 
-            tileNode = map.getChildNode(SceneNode.get1d((int)tilePos.x, (int)(tilePos.y + tileAdjusts.y), mapTileWidth));
+            tileNode = map.getChildNode(SceneNode.get1d((int)tilePos.x, (int)(tilePos.y + tileAdjusts.y), (int)mapTileSize.x));
             if(checkCollisions(tileNode))
                 return;
         }
         if(vel.x != 0 && vel.y != 0)
         {
-            tileNode = map.getChildNode(SceneNode.get1d((int)(tilePos.x + tileAdjusts.x), (int)(tilePos.y + tileAdjusts.y), mapTileWidth));
+            tileNode = map.getChildNode(SceneNode.get1d((int)(tilePos.x + tileAdjusts.x), (int)(tilePos.y + tileAdjusts.y), (int)mapTileSize.x));
             if(checkCollisions(tileNode))
                 return;
         }

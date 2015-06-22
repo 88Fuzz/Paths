@@ -18,7 +18,7 @@ public class Tower extends SceneNode
 {
     public enum Category
     {
-        BLOCK(2, 1, 3, 5, 20, TextureConstants.BLOCK_TILE_KEY, Bullet.Category.BASIC);
+        BLOCK(2, 10000, 3, 5, 20, TextureConstants.BLOCK_TILE_KEY, Bullet.Category.BASIC);
         
         private int shootRadius;
         private int maxBullets;
@@ -101,15 +101,15 @@ public class Tower extends SceneNode
      */
     public Tower() { }
     
-    public Tower(Category category, int x, int y, int mapTileWidth, int mapTileHeight, int tileSize, TextureAtlas atlas, SceneNode map)
+    public Tower(Category category, int x, int y, Vector2 windowTileSize, int tileSize, TextureAtlas atlas, SceneNode map)
     {
         super();
-        init(category, x, y, mapTileWidth, mapTileHeight, tileSize, atlas, map);
+        init(category, x, y, windowTileSize, tileSize, atlas, map);
     }
     
-    public void init(Category category, int x, int y, int mapTileWidth, int mapTileHeight, int tileSize, TextureAtlas atlas, SceneNode map)
+    public void init(Category category, int x, int y, Vector2 windowTileSize, int tileSize, TextureAtlas atlas, SceneNode map)
     {
-        super.init(SceneNode.Category.TOWER, mapTileWidth, mapTileHeight, tileSize, new Vector2(x,y), null);
+        super.init(SceneNode.Category.TOWER, windowTileSize, tileSize, new Vector2(x,y), null);
         state = State.INITIAL;
         this.atlas = atlas;
         this.map = map;
@@ -152,8 +152,8 @@ public class Tower extends SceneNode
             return;
         
         Bullet bullet = freeBullets.pop();
-        bullet.init(bulletType, mapTileWidth, mapTileHeight, tileSize, atlas, this, node, map);
-        map.futureLayerChildNode(bullet, SceneNode.get1d((int)tilePos.x, (int)tilePos.y, mapTileWidth));
+        bullet.init(bulletType, getWindowTileSize(), tileSize, atlas, this, node, map);
+        map.futureLayerChildNode(bullet, SceneNode.get1d((int)tilePos.x, (int)tilePos.y, getWindowTileSizeWidth()));
         activeBullets.add(bullet);
         shootDelay = maxShootDelay;
     }
@@ -208,6 +208,8 @@ public class Tower extends SceneNode
         if(freeBullets.size() == 0 || shootDelay > 0)
             return;
         
+        Vector2 tileSize = getWindowTileSize();
+        
         //TODO towers should attack mobs that are closest to the exit
         for(int i = (int) (tilePos.x -shootRadius); i <= tilePos.x + shootRadius; i++)
         {
@@ -215,12 +217,12 @@ public class Tower extends SceneNode
             {
                 if(i < 0 || j < 0)
                     continue;
-                else if(i > mapTileWidth - 1 || j > mapTileWidth -1)
+                else if(i > tileSize.x - 1 || j > tileSize.y -1)
                     continue;
                 else if(i == tilePos.x && j == tilePos.y)
                     continue;
                 
-                SceneNode tileNode = map.getChildNode(SceneNode.get1d(i, j, mapTileWidth));
+                SceneNode tileNode = map.getChildNode(SceneNode.get1d(i, j, (int)tileSize.x));
                 if(tileNode != null)
                 {
                     SceneNode child;

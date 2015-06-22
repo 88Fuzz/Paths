@@ -26,7 +26,7 @@ public class GameState extends ApplicationAdapter implements InputProcessor
     private static final float ZOOM_CONSTANT = 1;
     private static final float DEFAULT_CAMERA_ZOOM = 4;
     
-    public static final GameStats stats = new GameStats(100,0,1.0f,1.0f, 1000.0f);
+    public static final GameStats stats = new GameStats(1000,0,1.0f,1.0f, 1000.0f);
 
     private WorldRenderer worldRenderer;
     private SceneNode map;
@@ -58,11 +58,12 @@ public class GameState extends ApplicationAdapter implements InputProcessor
 		assMan.finishLoading();
 		atlas = assMan.get(TextureConstants.TILE_TEXTURES);
         tileSize = 200;
-        windowTileSize = new Vector2(30, 30);
+//        windowTileSize = new Vector2(30, 30);
+        windowTileSize = new Vector2(4, 4);
         windowPixelSize = new Vector2(windowTileSize);
         windowPixelSize.scl(200);
 
-        map = new MapNode(null, 0, 0, 0, 0, (int)windowTileSize.x, (int)windowTileSize.y, tileSize, MapNode.Category.NONE);
+        map = new MapNode(null, 0, 0, 0, 0, windowTileSize, tileSize, MapNode.Category.NONE);
         squareType = MapNode.Category.START;
         startNode = null;
         endNode = null;
@@ -77,7 +78,7 @@ public class GameState extends ApplicationAdapter implements InputProcessor
         {
             for(int i = 0; i < windowTileSize.x; i++)
             {
-                map.attachChild(new MapNode(atlas, i, j, tileSize, tileSize, (int)windowTileSize.x, (int)windowTileSize.y, tileSize, MapNode.Category.REGULAR));
+                map.attachChild(new MapNode(atlas, i, j, tileSize, tileSize, windowTileSize, tileSize, MapNode.Category.REGULAR));
             }
         }
         worldRenderer = new WorldRenderer(map, DEFAULT_CAMERA_ZOOM, stats);
@@ -134,8 +135,8 @@ public class GameState extends ApplicationAdapter implements InputProcessor
         {
             if(squareType == MapNode.Category.BLOCK)
             {
-                Mob tmp = new Splitter(Mob.Category.SPLITTER, atlas, (int)windowTileSize.x, (int)windowTileSize.y, tileSize, startNode, endNode, map);
-                time = tmp.getGlobalSpawnDelay();
+                Mob tmp = new Mob(Mob.Category.BASIC, atlas, windowTileSize, tileSize, startNode, endNode, map);
+                time = 8 * tmp.getGlobalSpawnDelay();
                 map.layerChildNode(tmp, SceneNode.get1d((int)startNode.getTilePosition().x, (int)startNode.getTilePosition().y, (int)windowTileSize.x));
             }
         }
@@ -220,9 +221,9 @@ public class GameState extends ApplicationAdapter implements InputProcessor
         switch(keycode)
         {
         case Input.Keys.ENTER:
-            PathGenerator.findPath((MapNode) map, startNode, endNode, windowTileSize);
+            findPath(true);
             Mob tmp = 
-                    new Mob(Mob.Category.BASIC, atlas, (int)windowTileSize.x, (int)windowTileSize.y, tileSize, startNode, endNode, map);
+                    new Mob(Mob.Category.BASIC, atlas, windowTileSize, tileSize, startNode, endNode, map);
             map.layerChildNode(tmp, SceneNode.get1d((int)startNode.getTilePosition().x, (int)startNode.getTilePosition().y, (int)windowTileSize.x));
             break;
         case Input.Keys.LEFT:
@@ -307,14 +308,20 @@ public class GameState extends ApplicationAdapter implements InputProcessor
                 mapTile.setType(squareType);
                 squareType = MapNode.Category.BLOCK;
                 endNode = mapTile;
-                PathGenerator.findPath((MapNode) map, startNode, endNode, windowTileSize);
+                startNode.validPath();
+                endNode.validPath();
+
+                //Calculate the distance from end node to every other node. This should only need be done once
+                PathGenerator.calulateGHValues((MapNode)map, endNode.getPosition(), startNode, endNode);
+
+                findPath(true);
             }
             else if(mapTile.getType() != MapNode.Category.START && mapTile.getType() != MapNode.Category.END)
             {
                 if(tmpTower == null)
                 {
                     tmpTower = new Tower(Tower.Category.BLOCK, ((int)touchedTile.x) * tileSize, ((int)touchedTile.y) * tileSize, 
-                            (int)windowTileSize.x, (int)windowTileSize.y, tileSize, atlas, map);
+                            windowTileSize, tileSize, atlas, map);
 
                     tile.layerChildNode(tmpTower);
                     return true;
@@ -330,7 +337,7 @@ public class GameState extends ApplicationAdapter implements InputProcessor
                             if(checkCrumbs(tmpTower) && validTowerPlacement(tile))
                             {
                                 stats.addCrumbs(-1 * tmpTower.getCrumbCost());
-                                PathGenerator.findPath((MapNode) map, startNode, endNode, windowTileSize);
+                                findPath(true);
                                 tmpTower.touched();
                                 tmpTower = null;
                                 return true;
@@ -376,10 +383,15 @@ public class GameState extends ApplicationAdapter implements InputProcessor
         if(!verifyEmptyTile(tile))
             return false;
 
-        if(PathGenerator.findPath((MapNode) map, startNode, endNode, windowTileSize))
+        if(findPath(false))
             return true;
 
         return false;
+    }
+    
+    private boolean findPath(boolean invalidatePath)
+    {
+        return PathGenerator.findPath((MapNode) map, startNode, endNode, windowTileSize, invalidatePath, false);
     }
 
     private boolean verifyEmptyTile(SceneNode tile)

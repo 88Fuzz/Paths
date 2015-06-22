@@ -49,17 +49,19 @@ public class MapNode extends SceneNode
     private float hValue;
     private MapNode parentPathNode;
     private MapNode childPathNode;
+    //An invalid path is used to determine is a mob has deviated from the real path to the exit and needs to recalculate
+    private boolean invalidPath;
     private TextureAtlas atlas;
 
-    public MapNode(TextureAtlas atlas, int x, int y, int width, int height, int mapTileWidth, int mapTileHeight, int tileSize, Category type)
+    public MapNode(TextureAtlas atlas, int x, int y, int width, int height, Vector2 windowTileSize, int tileSize, Category type)
     {
         super();
-        init(atlas, x, y, width, height, mapTileWidth, mapTileHeight, tileSize, type);
+        init(atlas, x, y, width, height, windowTileSize, tileSize, type);
     }
     
-    public void init(TextureAtlas atlas, int x, int y, int width, int height, int mapTileWidth, int mapTileHeight, int tileSize, Category type)
+    public void init(TextureAtlas atlas, int x, int y, int width, int height, Vector2 windowTileSize, int tileSize, Category type)
     {
-        super.init(SceneNode.Category.NONE, mapTileWidth, mapTileHeight, tileSize, new Vector2(x*width, y*height), null);
+        super.init(SceneNode.Category.NONE, windowTileSize, tileSize, new Vector2(x*width, y*height), null);
         gValue = 0;
         hValue = 0;
         parentPathNode = null;
@@ -67,6 +69,7 @@ public class MapNode extends SceneNode
         this.atlas = atlas;
         sprite = new Sprite();
         sprite.setPosition(pos.x, pos.y);
+        invalidPath = true;
         setType(type);
     }
 
@@ -159,6 +162,21 @@ public class MapNode extends SceneNode
     public Iterator<SceneNode> getChildrenIterator()
     {
         return children.iterator();
+    }
+    
+    public boolean isValidPath()
+    {
+        return !invalidPath;
+    }
+    
+    public void validPath()
+    {
+        invalidPath = false;
+    }
+    
+    public void invalidatePath()
+    {
+        invalidPath = true;
     }
 
     @Override
