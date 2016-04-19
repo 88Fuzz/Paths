@@ -8,6 +8,7 @@ import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.math.Vector2;
 import com.paths.constants.TextureConstants;
 import com.paths.utils.GraphicsUtils;
+import com.paths.utils.PathGenerator.AStarNodeType;
 
 public class MapNode extends SceneNode
 {
@@ -18,11 +19,12 @@ public class MapNode extends SceneNode
         BLOCK(1<<2, TextureConstants.GRASS_TILE_KEY),
         REGULAR(1<<3, TextureConstants.GRASS_TILE_KEY),
         PATH(1<<4, TextureConstants.PATH_TILE_KEY),
-        OPEN(1<<5, (TextureConstants.DEBUG) ? TextureConstants.OPEN_TILE_KEY: TextureConstants.GRASS_TILE_KEY),
-        CLOSED(1<<6, (TextureConstants.DEBUG) ? TextureConstants.CLOSED_TILE_KEY: TextureConstants.GRASS_TILE_KEY),
+//        OPEN(1<<5, (TextureConstants.DEBUG) ? TextureConstants.OPEN_TILE_KEY: TextureConstants.GRASS_TILE_KEY),
+//        CLOSED(1<<6, (TextureConstants.DEBUG) ? TextureConstants.CLOSED_TILE_KEY: TextureConstants.GRASS_TILE_KEY),
         NONE(1<<7, TextureConstants.BLOCK_TILE_KEY),
         BLOCKING(BLOCK.getValue() | NONE.getValue(), ""),
-        START_OR_END(START.getValue() | END.getValue(), "");
+        START_OR_END(START.getValue() | END.getValue(), ""),
+        BLOCKING_START_EXIT(BLOCKING.getValue() | START_OR_END.getValue(), "");
         
         private final int value;
         private final String textureKey;
@@ -52,6 +54,7 @@ public class MapNode extends SceneNode
     //An invalid path is used to determine is a mob has deviated from the real path to the exit and needs to recalculate
     private boolean invalidPath;
     private TextureAtlas atlas;
+    private AStarNodeType pathFindingType;
 
     public MapNode(TextureAtlas atlas, int x, int y, int width, int height, Vector2 windowTileSize, int tileSize, Category type)
     {
@@ -62,6 +65,7 @@ public class MapNode extends SceneNode
     public void init(TextureAtlas atlas, int x, int y, int width, int height, Vector2 windowTileSize, int tileSize, Category type)
     {
         super.init(SceneNode.Category.NONE, windowTileSize, tileSize, new Vector2(x*width, y*height), null);
+        pathFindingType = AStarNodeType.NONE;
         gValue = 0;
         hValue = 0;
         parentPathNode = null;
@@ -75,6 +79,10 @@ public class MapNode extends SceneNode
 
     public void setType(Category type)
     {
+        if(nodeType == Category.BLOCK)
+            System.out.println("replacing a block");
+        else if(nodeType == Category.PATH)
+            System.out.println("replacing a path");
         nodeType = type;
         setTexture(type);
     }
@@ -183,5 +191,15 @@ public class MapNode extends SceneNode
     public void printDebugCurrent()
     {
         //System.out.println("tile number " + deleteMe);
+    }
+    
+    public void setPathFindingType(AStarNodeType type)
+    {
+        pathFindingType = type;
+    }
+    
+    public AStarNodeType getPathFindingType()
+    {
+        return pathFindingType;
     }
 }

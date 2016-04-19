@@ -10,6 +10,12 @@ import com.paths.drawable.SceneNode;
 
 public class PathGenerator
 {
+    public enum AStarNodeType {
+        OPEN,
+        CLOSED,
+        NONE
+    };
+
     private static class MapNodeComparator implements Comparator<MapNode>
     {
         @Override
@@ -40,6 +46,7 @@ public class PathGenerator
         boolean finished = false;
         boolean pathFound = true;
         MapNode.Category nodeType;
+        AStarNodeType pathingType;
 
         openList.add(startNode);
         while(!finished)
@@ -68,7 +75,7 @@ public class PathGenerator
 
             //ADD it to the closed list, don't add start node so that the color doesn't change
             if(currentNode != startNode)
-                currentNode.setType(MapNode.Category.CLOSED);
+                currentNode.setPathFindingType(AStarNodeType.CLOSED);
 
             pos = currentNode.getPosition();
             tilePos = currentNode.getTilePosition();
@@ -113,22 +120,24 @@ public class PathGenerator
                         break;
                     }
                     nodeType = adjacentNode.getType();
+                    pathingType = adjacentNode.getPathFindingType();
 
                     //TODO this is not correct. If node is closed but the f value is less here, update it and put it in open list
-                    if(nodeType == MapNode.Category.CLOSED || (nodeType.getValue() & MapNode.Category.BLOCKING.getValue()) != 0)
+                    if(pathingType == AStarNodeType.CLOSED || (nodeType.getValue() & MapNode.Category.BLOCKING.getValue()) != 0)
                     {
                         continue;
                     }
 
                     float distance = CollisionDetection.getDistance(pos, adjacentNode.getPosition());
-                    if(nodeType != MapNode.Category.OPEN || adjacentNode.getDistanceFromStart() > distance + currentNode.getDistanceFromStart())
+                    if(pathingType != AStarNodeType.OPEN || adjacentNode.getDistanceFromStart() > distance + currentNode.getDistanceFromStart())
                     {
                         adjacentNode.setDistanceFromStart(distance + currentNode.getDistanceFromStart());
                         adjacentNode.setParentPathNode(currentNode);
                         prevNode = adjacentNode;
-                        if(nodeType != MapNode.Category.OPEN)
+                        if(pathingType != AStarNodeType.OPEN)
                         {
-                            adjacentNode.setType(MapNode.Category.OPEN);
+//                            this should be changing som eother property and not the node type.
+                            adjacentNode.setPathFindingType(AStarNodeType.OPEN);
                             openList.add(adjacentNode);
                         }
                     }
@@ -190,10 +199,13 @@ public class PathGenerator
         {
             node = (MapNode) it.next();
             MapNode.Category type = node.getType();
-            if(node.isValidPath())
-                node.setType(MapNode.Category.PATH);
-            else if(type == MapNode.Category.OPEN || type == MapNode.Category.CLOSED)
-                node.setType(MapNode.Category.REGULAR);
+//            if(node.isValidPath())
+//                node.setType(MapNode.Category.PATH);
+            System.out.println("Iterating over " + node.getTilePosition());
+            if((type.getValue() & MapNode.Category.BLOCKING.getValue()) == 0)
+                node.setPathFindingType(AStarNodeType.NONE);
+            //TODO this next line is needed, I'm pretty sure
+//                node.setType(MapNode.Category.REGULAR);
             
             //This may need to go in the if above
             if(invalidatePaths)

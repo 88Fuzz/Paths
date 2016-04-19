@@ -136,6 +136,7 @@ public class GameState extends ApplicationAdapter implements InputProcessor
             if(squareType == MapNode.Category.BLOCK)
             {
                 Mob tmp = new Mob(Mob.Category.BASIC, atlas, windowTileSize, tileSize, startNode, endNode, map);
+                System.out.println("\tstart node " + startNode.getTilePosition() + " pos " + startNode.getPosition());
                 time = 8 * tmp.getGlobalSpawnDelay();
                 map.layerChildNode(tmp, SceneNode.get1d((int)startNode.getTilePosition().x, (int)startNode.getTilePosition().y, (int)windowTileSize.x));
             }
